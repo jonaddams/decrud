@@ -18,12 +18,14 @@ All work should be done in small, incremental changes that maintain a working st
 - Small, pure functions
 - TypeScript strict mode always
 - Use real schemas/types in tests, never redefine them
+- All code must pass Biome linting before commit
 
 **Preferred Tools:**
 
 - **Language**: TypeScript (strict mode)
 - **Testing**: Jest/Vitest + React Testing Library
 - **State Management**: Prefer immutable patterns
+- **Linting**: Biome (latest version)
 
 ## Testing Principles
 
@@ -41,7 +43,6 @@ All work should be done in small, incremental changes that maintain a working st
 - **Jest** or **Vitest** for testing frameworks
 - **React Testing Library** for React components
 - All test code must follow the same TypeScript strict mode rules as production code
-- Run Biome and fix errors after every code update
 
 ### Test Organization
 
@@ -52,6 +53,37 @@ app/
       payment-processor.ts
       payment-processor.test.ts
 ```
+
+## Code Quality Standards
+
+### Biome Linting
+
+**CRITICAL**: All code must pass Biome linting before committing. This is non-negotiable for company repository standards.
+
+- **Version**: Use latest version of Biome (currently 2.1.4+)
+- **Installation**: Biome is available globally via Brew, but project should have local dependency
+- **Usage**: Run `biome check` and `biome check --write` to auto-fix issues
+- **Configuration**: Project uses default Biome configuration with TypeScript support
+- **Integration**: Must be run after every code change before commit
+
+**Required Commands:**
+```bash
+# Check for linting errors
+biome check
+
+# Auto-fix linting errors where possible  
+biome check --write
+
+# Format code according to Biome standards
+biome format --write
+```
+
+**Workflow Integration:**
+- Run Biome checks after every significant code change
+- Fix all Biome errors before committing
+- Use `biome check --write` for auto-fixes
+- Manually resolve any remaining linting issues
+- Biome errors will block company repository commits
 
 ## TypeScript Guidelines
 

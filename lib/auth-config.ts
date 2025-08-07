@@ -1,7 +1,7 @@
-import { NextAuthOptions } from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { PrismaClient } from '@prisma/client';
+import type { NextAuthOptions } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
 
 const prisma = new PrismaClient();
 
@@ -19,13 +19,13 @@ export const authOptions: NextAuthOptions = {
         // Add user ID and role to session
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email! },
-          select: { 
-            id: true, 
-            role: true, 
+          select: {
+            id: true,
+            role: true,
             currentImpersonationMode: true,
           },
         });
-        
+
         if (dbUser) {
           session.user.id = dbUser.id;
           session.user.role = dbUser.role;

@@ -1,8 +1,8 @@
 'use client';
 
-import { signIn, getSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSession, signIn } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 
 export default function SignIn() {
   const router = useRouter();
@@ -47,9 +47,7 @@ export default function SignIn() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Document Engine CRUD Application
-          </p>
+          <p className="mt-2 text-center text-sm text-gray-600">Document Engine CRUD Application</p>
         </div>
         <div>
           <button

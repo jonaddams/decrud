@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { documentEngineService } from '@/lib/document-engine';
 
@@ -19,7 +19,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Document Engine health check error:', error);
-    
+
     if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }

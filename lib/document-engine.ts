@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
 export interface DocumentEngineUploadResponse {
   documentId: string;
@@ -43,7 +43,7 @@ class DocumentEngineService {
       const response = await fetch(`${this.baseUrl}/api/documents`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: formData,
       });
@@ -54,7 +54,7 @@ class DocumentEngineService {
       }
 
       const result = await response.json();
-      
+
       if (!result.documentId) {
         throw new Error('Document Engine did not return a document ID');
       }
@@ -74,7 +74,7 @@ class DocumentEngineService {
       const response = await fetch(`${this.baseUrl}/api/documents/${documentId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
         },
       });
 
@@ -92,18 +92,18 @@ class DocumentEngineService {
    * Generate a JWT token for Document Engine viewer access
    */
   async generateViewerJWT(
-    documentId: string, 
+    documentId: string,
     permissions: string[] = ['read-document'],
     userId?: string,
     expiresInHours: number = 1
   ): Promise<string> {
     try {
       const privateKey = fs.readFileSync(this.privateKeyPath, 'utf8');
-      
+
       const payload: ViewerJWTPayload = {
         document_id: documentId,
         permissions,
-        exp: Math.floor(Date.now() / 1000) + (expiresInHours * 60 * 60),
+        exp: Math.floor(Date.now() / 1000) + expiresInHours * 60 * 60,
       };
 
       if (userId) {
@@ -160,7 +160,7 @@ class DocumentEngineService {
       const response = await fetch(`${this.baseUrl}/health`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
         },
       });
 
@@ -181,7 +181,7 @@ class DocumentEngineService {
         status: error.message.includes('fetch') ? 503 : 500,
       };
     }
-    
+
     return {
       message: 'An unknown error occurred with Document Engine',
       status: 500,
@@ -203,10 +203,12 @@ class DocumentEngineService {
         return await operation();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
-        
+
         if (attempt < maxRetries) {
-          console.log(`Document Engine operation failed, retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
-          await new Promise(resolve => setTimeout(resolve, delayMs));
+          console.log(
+            `Document Engine operation failed, retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries + 1})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       }
     }

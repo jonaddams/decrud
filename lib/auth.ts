@@ -1,6 +1,6 @@
+import type { ImpersonationMode, UserRole } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth-config';
-import { UserRole, ImpersonationMode } from '@prisma/client';
 
 export type SessionUser = {
   id: string;
@@ -22,11 +22,11 @@ export async function getSession() {
  */
 export async function requireAuth() {
   const session = await getSession();
-  
+
   if (!session?.user?.id) {
     throw new Error('Authentication required');
   }
-  
+
   return session;
 }
 
@@ -36,11 +36,11 @@ export async function requireAuth() {
  */
 export async function requireAdmin() {
   const session = await requireAuth();
-  
+
   if (session.user.role !== 'ADMIN') {
     throw new Error('Admin access required');
   }
-  
+
   return session;
 }
 
@@ -52,7 +52,7 @@ export function getEffectiveDocumentFilter(user: SessionUser) {
   if (user.role === 'ADMIN' && user.currentImpersonationMode === 'ADMIN') {
     return {}; // No filter - see all documents
   }
-  
+
   return { ownerId: user.id }; // Only user's own documents
 }
 

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth, getEffectiveDocumentFilter } from '@/lib/auth';
+import { type NextRequest, NextResponse } from 'next/server';
+import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 import { documentEngineService } from '@/lib/document-engine';
 
 const prisma = new PrismaClient();
@@ -9,10 +9,7 @@ const prisma = new PrismaClient();
  * GET /api/documents/[id]/viewer-url
  * Generate a Document Engine viewer URL with JWT
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await requireAuth();
@@ -58,7 +55,7 @@ export async function GET(
     });
   } catch (error) {
     console.error(`GET /api/documents/[id]/viewer-url error:`, error);
-    
+
     if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
@@ -70,9 +67,6 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(
-      { error: 'Failed to generate viewer URL' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to generate viewer URL' }, { status: 500 });
   }
 }

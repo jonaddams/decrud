@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth, getEffectiveDocumentFilter } from '@/lib/auth';
+import { type NextRequest, NextResponse } from 'next/server';
+import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 import { documentEngineService } from '@/lib/document-engine';
 
 const prisma = new PrismaClient();
@@ -42,15 +42,12 @@ export async function GET() {
     return NextResponse.json({ documents });
   } catch (error) {
     console.error('GET /api/documents error:', error);
-    
+
     if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    return NextResponse.json(
-      { error: 'Failed to fetch documents' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 });
   }
 }
 
@@ -61,7 +58,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth();
-    
+
     // Parse multipart form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -79,15 +76,12 @@ export async function POST(request: NextRequest) {
     // Validate file size (10MB limit)
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'File size must be less than 10MB' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'File size must be less than 10MB' }, { status: 400 });
     }
 
     // Upload to Document Engine with retry logic
-    const documentEngineResult = await documentEngineService.withRetry(
-      () => documentEngineService.uploadDocument(file)
+    const documentEngineResult = await documentEngineService.withRetry(() =>
+      documentEngineService.uploadDocument(file)
     );
 
     // Store metadata in database
@@ -123,7 +117,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ document: serializedDocument }, { status: 201 });
   } catch (error) {
     console.error('POST /api/documents error:', error);
-    
+
     if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
@@ -135,9 +129,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { error: 'Failed to upload document' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to upload document' }, { status: 500 });
   }
 }

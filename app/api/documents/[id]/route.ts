@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth, getEffectiveDocumentFilter } from '@/lib/auth';
+import { type NextRequest, NextResponse } from 'next/server';
+import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 import { documentEngineService } from '@/lib/document-engine';
 
 const prisma = new PrismaClient();
@@ -9,10 +9,7 @@ const prisma = new PrismaClient();
  * GET /api/documents/[id]
  * Get a specific document's metadata
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await requireAuth();
@@ -56,15 +53,12 @@ export async function GET(
     return NextResponse.json({ document: serializedDocument });
   } catch (error) {
     console.error(`GET /api/documents/[id] error:`, error);
-    
+
     if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    return NextResponse.json(
-      { error: 'Failed to fetch document' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch document' }, { status: 500 });
   }
 }
 
@@ -72,15 +66,12 @@ export async function GET(
  * PUT /api/documents/[id]
  * Update a document's metadata
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await requireAuth();
     const filter = getEffectiveDocumentFilter(session.user);
-    
+
     const { title, author } = await request.json();
 
     if (!title) {
@@ -129,15 +120,12 @@ export async function PUT(
     return NextResponse.json({ document: serializedDocument });
   } catch (error) {
     console.error(`PUT /api/documents/[id] error:`, error);
-    
+
     if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update document' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update document' }, { status: 500 });
   }
 }
 
@@ -168,8 +156,8 @@ export async function DELETE(
 
     // Delete from Document Engine (with retry logic, but don't fail if it fails)
     try {
-      await documentEngineService.withRetry(
-        () => documentEngineService.deleteDocument(document.documentEngineId)
+      await documentEngineService.withRetry(() =>
+        documentEngineService.deleteDocument(document.documentEngineId)
       );
     } catch (error) {
       console.warn('Failed to delete document from Document Engine:', error);
@@ -184,14 +172,11 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(`DELETE /api/documents/[id] error:`, error);
-    
+
     if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    return NextResponse.json(
-      { error: 'Failed to delete document' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 });
   }
 }
