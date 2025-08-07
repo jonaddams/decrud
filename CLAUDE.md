@@ -1184,10 +1184,17 @@ const nextConfig: NextConfig = {
   // Exclude from server-side bundling (works with both Turbopack and Webpack)
   serverExternalPackages: ['@nutrient-sdk/viewer'],
   
-  // Exclude from client-side bundling (Webpack only)
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Client-side external mapping to global CDN variable
+  // Turbopack configuration for development
+  turbopack: {
+    resolveAlias: {
+      '@nutrient-sdk/viewer': 'NutrientViewer',
+    },
+  },
+  
+  // Webpack configuration for production builds only
+  webpack: (config, { isServer, dev }) => {
+    // Only configure webpack externals when not using Turbopack (production builds)
+    if (!isServer && !dev) {
       config.externals = {
         ...config.externals,
         '@nutrient-sdk/viewer': 'NutrientViewer',
@@ -1200,8 +1207,9 @@ const nextConfig: NextConfig = {
 
 This configuration:
 - Prevents bundling the SDK on the server (`serverExternalPackages`)
-- Maps the import to the global `NutrientViewer` variable on the client
-- Works with both Turbopack (development) and Webpack (production)
+- Uses Turbopack `resolveAlias` for development builds
+- Uses Webpack externals only for production builds (`!dev`)
+- Eliminates the "Webpack configured while Turbopack is not" warning
 
 ## Resources and References
 

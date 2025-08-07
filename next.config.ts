@@ -4,9 +4,16 @@ const nextConfig: NextConfig = {
   // Exclude @nutrient-sdk/viewer from the bundle since we're using the CDN version
   serverExternalPackages: ['@nutrient-sdk/viewer'],
   
-  webpack: (config, { isServer }) => {
-    // Only configure webpack externals for client-side bundles
-    if (!isServer) {
+  // Turbopack configuration for development
+  turbopack: {
+    resolveAlias: {
+      '@nutrient-sdk/viewer': 'NutrientViewer',
+    },
+  },
+  
+  webpack: (config, { isServer, dev }) => {
+    // Only configure webpack externals when not using Turbopack (production builds)
+    if (!isServer && !dev) {
       if (Array.isArray(config.externals)) {
         config.externals.push({
           '@nutrient-sdk/viewer': 'NutrientViewer',
