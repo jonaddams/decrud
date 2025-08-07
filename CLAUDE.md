@@ -1150,12 +1150,38 @@ const processOrder = (order: Order) => {
 };
 ```
 
+## Project Configuration
+
+### Nutrient Viewer CDN Version Management
+
+The Nutrient Viewer CDN version is managed through environment variables for easy updates:
+
+```bash
+# .env and .env.local
+NUTRIENT_VIEWER_VERSION=1.4.1
+```
+
+This allows updating the Nutrient Viewer library version by simply changing the environment variable rather than searching through code. The version is used in `app/layout.tsx`:
+
+```typescript
+<Script
+  src={`https://cdn.cloud.pspdfkit.com/pspdfkit-web@${process.env.NUTRIENT_VIEWER_VERSION}/nutrient-viewer.js`}
+  strategy="beforeInteractive"
+/>
+```
+
+**Important**: When updating the Nutrient Viewer version, also check:
+1. TypeScript definitions in `global.d.ts` for API compatibility
+2. Documentation in `de-api-docs/` for any breaking changes
+3. Run full test suite to ensure compatibility
+
 ## Resources and References
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 - [Testing Library Principles](https://testing-library.com/docs/guiding-principles)
 - [Kent C. Dodds Testing JavaScript](https://testingjavascript.com/)
 - [Functional Programming in TypeScript](https://gcanti.github.io/fp-ts/)
+- [Nutrient Document Engine Documentation](./de-api-docs/)
 
 ## Summary
 

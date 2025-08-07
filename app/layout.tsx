@@ -28,7 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <Script
-          src="https://cdn.cloud.pspdfkit.com/pspdfkit-web@1.4.1/nutrient-viewer.js"
+          src={`https://cdn.cloud.pspdfkit.com/pspdfkit-web@${process.env.NUTRIENT_VIEWER_VERSION}/nutrient-viewer.js`}
           strategy="beforeInteractive"
         />
       </head>
