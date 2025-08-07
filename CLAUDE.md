@@ -1175,6 +1175,34 @@ This allows updating the Nutrient Viewer library version by simply changing the 
 2. Documentation in `de-api-docs/` for any breaking changes
 3. Run full test suite to ensure compatibility
 
+### Next.js and Webpack Configuration
+
+The project uses Next.js 15 with Turbopack for development. To exclude the `@nutrient-sdk/viewer` package from bundling (since we use the CDN version), we configure both server and client-side externals in `next.config.ts`:
+
+```typescript
+const nextConfig: NextConfig = {
+  // Exclude from server-side bundling (works with both Turbopack and Webpack)
+  serverExternalPackages: ['@nutrient-sdk/viewer'],
+  
+  // Exclude from client-side bundling (Webpack only)
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Client-side external mapping to global CDN variable
+      config.externals = {
+        ...config.externals,
+        '@nutrient-sdk/viewer': 'NutrientViewer',
+      };
+    }
+    return config;
+  },
+};
+```
+
+This configuration:
+- Prevents bundling the SDK on the server (`serverExternalPackages`)
+- Maps the import to the global `NutrientViewer` variable on the client
+- Works with both Turbopack (development) and Webpack (production)
+
 ## Resources and References
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
