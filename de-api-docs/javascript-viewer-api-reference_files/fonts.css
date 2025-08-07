@@ -1,0 +1,49 @@
+@font-face {
+  font-family: ABC Monument Grotesk;
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("/assets/fonts/ABCMonumentGroteskVariable-cbc6bd99.ttf") format("truetype supports variation"), url("/assets/fonts/ABCMonumentGroteskVariable-cbc6bd99.ttf") format("truetype-variations"), url("/assets/fonts/ABCMonumentGroteskVariable-3d80c750.woff") format("woff supports variation"), url("/assets/fonts/ABCMonumentGroteskVariable-3d80c750.woff") format("woff-variations"), url("/assets/fonts/ABCMonumentGroteskVariable-1ecead95.woff2") format("woff2 supports variations"), url("/assets/fonts/ABCMonumentGroteskVariable-1ecead95.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: ABC Monument Grotesk Mono;
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+  src: url("/assets/fonts/ABCMonumentGroteskMono-Bold-3d3733f9.otf") format("opentype"), url("/assets/fonts/ABCMonumentGroteskMono-Bold-54a97696.woff") format("woff"), url("/assets/fonts/ABCMonumentGroteskMono-Bold-b1f26273.woff2") format("woff2");
+}
+@font-face {
+  font-family: ABC Monument Grotesk Mono;
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+  src: url("/assets/fonts/ABCMonumentGroteskMono-BoldItalic-22407b75.otf") format("opentype"), url("/assets/fonts/ABCMonumentGroteskMono-BoldItalic-f5eceb44.woff") format("woff"), url("/assets/fonts/ABCMonumentGroteskMono-BoldItalic-9e29ce33.woff2") format("woff2");
+}
+@font-face {
+  font-family: ABC Monument Grotesk Mono;
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  src: url("/assets/fonts/ABCMonumentGroteskMono-Medium-bb1fabb0.otf") format("opentype"), url("/assets/fonts/ABCMonumentGroteskMono-Medium-7196e476.woff") format("woff"), url("/assets/fonts/ABCMonumentGroteskMono-Medium-83662d68.woff2") format("woff2");
+}
+@font-face {
+  font-family: ABC Monument Grotesk Mono;
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+  src: url("/assets/fonts/ABCMonumentGroteskMono-MediumItalic-72f1150f.otf") format("opentype"), url("/assets/fonts/ABCMonumentGroteskMono-MediumItalic-04e3d93f.woff") format("woff"), url("/assets/fonts/ABCMonumentGroteskMono-MediumItalic-64a928d2.woff2") format("woff2");
+}
+@font-face {
+  font-family: ABC Monument Grotesk Semi-Mono;
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  src: url("/assets/fonts/ABCMonumentGroteskSemi-Mono-Regular-e83ec4df.otf") format("opentype"), url("/assets/fonts/ABCMonumentGroteskSemi-Mono-Regular-9a4b93a3.woff") format("woff"), url("/assets/fonts/ABCMonumentGroteskSemi-Mono-Regular-8cf85ae3.woff2") format("woff2");
+}
+@font-face {
+  font-family: ABC Monument Grotesk Semi-Mono;
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+  src: url("/assets/fonts/ABCMonumentGroteskSemi-Mono-RegularItalic-b6db4274.otf") format("opentype"), url("/assets/fonts/ABCMonumentGroteskSemi-Mono-RegularItalic-0f31bc16.woff") format("woff"), url("/assets/fonts/ABCMonumentGroteskSemi-Mono-RegularItalic-ed839166.woff2") format("woff2");
+}

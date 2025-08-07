@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import Script from 'next/script';
 import SessionProvider from '@/components/providers/session-provider';
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Document Engine CRUD App',
-  description: 'A CRUD application with Document Engine integration',
+  title: 'Nutrient Document Engine CRUD App',
+  description: 'A CRUD application with Nutrient Document Engine integration',
 };
 
 export default function RootLayout({
@@ -25,6 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src="https://cdn.cloud.pspdfkit.com/pspdfkit-web@1.4.1/nutrient-viewer.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProvider>{children}</SessionProvider>
       </body>
