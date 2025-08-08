@@ -120,17 +120,17 @@ export function DocumentList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-md bg-red-50 p-4">
+      <div className="rounded-md bg-error/10 border border-error/20 p-4">
         <div className="flex">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <svg className="h-5 w-5 text-error" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -139,15 +139,15 @@ export function DocumentList() {
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error loading documents</h3>
-            <div className="mt-2 text-sm text-red-700">
+            <h3 className="text-sm font-medium text-error">Error loading documents</h3>
+            <div className="mt-2 text-sm text-muted">
               <p>{error}</p>
             </div>
             <div className="mt-4">
               <button
                 type="button"
                 onClick={fetchDocuments}
-                className="bg-red-100 px-3 py-2 text-sm font-medium text-red-800 hover:bg-red-200 rounded-md"
+                className="bg-error/10 hover:bg-error/20 px-3 py-2 text-sm font-medium text-error rounded-md transition-colors"
               >
                 Try again
               </button>
@@ -162,7 +162,7 @@ export function DocumentList() {
     return (
       <div className="text-center py-12">
         <svg
-          className="mx-auto h-12 w-12 text-gray-400"
+          className="mx-auto h-12 w-12 text-subtle"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -174,39 +174,39 @@ export function DocumentList() {
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 className="mt-2 text-sm font-medium text-gray-900">No documents</h3>
-        <p className="mt-1 text-sm text-gray-500">Get started by uploading your first document.</p>
+        <h3 className="mt-2 text-sm font-medium text-foreground">No documents</h3>
+        <p className="mt-1 text-sm text-muted">Get started by uploading your first document.</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-        <table className="min-w-full divide-y divide-gray-300">
-          <thead className="bg-gray-50">
+      <div className="overflow-hidden shadow ring-1 ring-border md:rounded-lg">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-surface">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider"
               >
                 Name
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider"
               >
                 Size
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider"
               >
                 Uploaded by
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider"
               >
                 Created
               </th>
@@ -215,33 +215,33 @@ export function DocumentList() {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-background divide-y divide-border">
             {documents.map((document) => (
-              <tr key={document.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <tr key={document.id} className="hover:bg-surface-hover transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                   {document.title}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                   {formatFileSize(document.fileSize)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                   {document.owner.name || document.owner.email}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                   {formatDate(document.createdAt)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-4">
                     <Link
                       href={`/documents/${document.id}`}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-primary hover:text-primary-hover transition-colors"
                     >
                       View
                     </Link>
                     {canDeleteDocument(document) && (
                       <button
                         onClick={() => handleDeleteClick(document)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-error hover:text-error/80 transition-colors disabled:opacity-50"
                         disabled={isDeleting}
                       >
                         Delete
@@ -257,12 +257,12 @@ export function DocumentList() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmation && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-background border border-border rounded-lg max-w-md w-full p-6 shadow-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-6 w-6 text-red-600"
+                  className="h-6 w-6 text-error"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
@@ -276,9 +276,9 @@ export function DocumentList() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">Delete Document</h3>
+                <h3 className="text-lg font-medium text-foreground">Delete Document</h3>
                 <div className="mt-2">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted">
                     Are you sure you want to delete &ldquo;{deleteConfirmation.documentTitle}&rdquo;? This action cannot be undone.
                   </p>
                 </div>
@@ -289,7 +289,7 @@ export function DocumentList() {
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-error text-base font-medium text-primary-foreground hover:bg-error/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
@@ -297,7 +297,7 @@ export function DocumentList() {
                 type="button"
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-surface text-base font-medium text-accent-foreground hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
