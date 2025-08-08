@@ -147,7 +147,7 @@ export function DocumentList() {
               <button
                 type="button"
                 onClick={fetchDocuments}
-                className="bg-error/10 hover:bg-error/20 px-3 py-2 text-sm font-medium text-error rounded-md transition-colors"
+                className="bg-error/10 hover:bg-error/20 px-3 py-2 text-sm font-medium text-error rounded-md transition-colors cursor-pointer"
               >
                 Try again
               </button>
@@ -234,14 +234,14 @@ export function DocumentList() {
                   <div className="flex items-center justify-end space-x-4">
                     <Link
                       href={`/documents/${document.id}`}
-                      className="text-primary hover:text-primary-hover transition-colors"
+                      className="text-primary hover:text-primary-hover transition-colors cursor-pointer"
                     >
                       View
                     </Link>
                     {canDeleteDocument(document) && (
                       <button
                         onClick={() => handleDeleteClick(document)}
-                        className="text-error hover:text-error/80 transition-colors disabled:opacity-50"
+                        className="text-error hover:text-error/80 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                         disabled={isDeleting}
                       >
                         Delete
@@ -289,7 +289,7 @@ export function DocumentList() {
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-error text-base font-medium text-primary-foreground hover:bg-error/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-error text-base font-medium text-primary-foreground hover:bg-error/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
@@ -297,7 +297,7 @@ export function DocumentList() {
                 type="button"
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-surface text-base font-medium text-accent-foreground hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50 transition-colors"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-surface text-base font-medium text-accent-foreground hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
               >
                 Cancel
               </button>

@@ -26,7 +26,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
               </span>
               <Link
                 href="/api/auth/signout"
-                className="text-sm text-primary hover:text-primary-hover"
+                className="text-sm text-primary hover:text-primary-hover transition-colors cursor-pointer"
               >
                 Sign out
               </Link>
