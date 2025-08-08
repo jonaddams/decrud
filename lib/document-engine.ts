@@ -43,7 +43,7 @@ class DocumentEngineService {
       const response = await fetch(`${this.baseUrl}/api/documents`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Token token=${this.apiKey}`,
         },
         body: formData,
       });
@@ -54,12 +54,17 @@ class DocumentEngineService {
       }
 
       const result = await response.json();
+      console.log('Document Engine response:', result);
 
-      if (!result.documentId) {
+      // Document Engine returns the ID in data.document_id according to API docs
+      const documentId = result.data?.document_id;
+
+      if (!documentId) {
+        console.error('Document Engine response structure:', JSON.stringify(result, null, 2));
         throw new Error('Document Engine did not return a document ID');
       }
 
-      return { documentId: result.documentId };
+      return { documentId };
     } catch (error) {
       console.error('Document Engine upload error:', error);
       throw this.handleError(error);
@@ -74,7 +79,7 @@ class DocumentEngineService {
       const response = await fetch(`${this.baseUrl}/api/documents/${documentId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Token token=${this.apiKey}`,
         },
       });
 
@@ -157,10 +162,10 @@ class DocumentEngineService {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/health`, {
+      const response = await fetch(`${this.baseUrl}/api/health`, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Token token=${this.apiKey}`,
         },
       });
 

@@ -20,6 +20,8 @@ export function FileUpload() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
 
   const resetUploadState = useCallback(() => {
     setUploadState({
@@ -30,10 +32,15 @@ export function FileUpload() {
     });
   }, []);
 
-  const handleFileSelect = useCallback((file: File) => {
-    setSelectedFile(file);
-    resetUploadState();
-  }, [resetUploadState]);
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      setSelectedFile(file);
+      setTitle(file.name.replace(/\.[^/.]+$/, '')); // Use filename without extension as default title
+      setAuthor('');
+      resetUploadState();
+    },
+    [resetUploadState]
+  );
 
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,45 +75,57 @@ export function FileUpload() {
     setDragOver(false);
   }, []);
 
-  const uploadFile = useCallback(async (file: File) => {
-    setUploadState((prev) => ({ ...prev, isUploading: true, error: null }));
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
-      }
-
-      const data = await response.json();
-
-      setUploadState({
-        isUploading: false,
-        progress: 100,
-        error: null,
-        success: true,
-      });
-
-      // Redirect to document view after successful upload
-      setTimeout(() => {
-        router.push(`/documents/${data.document.id}`);
-      }, 1500);
-    } catch (error) {
-      setUploadState({
-        isUploading: false,
-        progress: 0,
-        error: error instanceof Error ? error.message : 'Upload failed',
-        success: false,
-      });
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      document.getElementById('file-upload')?.click();
     }
-  }, [router]);
+  }, []);
+
+  const uploadFile = useCallback(
+    async (file: File) => {
+      setUploadState((prev) => ({ ...prev, isUploading: true, error: null }));
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('title', title);
+        formData.append('author', author);
+
+        const response = await fetch('/api/documents', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Upload failed');
+        }
+
+        const data = await response.json();
+
+        setUploadState({
+          isUploading: false,
+          progress: 100,
+          error: null,
+          success: true,
+        });
+
+        // Redirect to document view after successful upload
+        setTimeout(() => {
+          router.push(`/documents/${data.document.id}`);
+        }, 1500);
+      } catch (error) {
+        setUploadState({
+          isUploading: false,
+          progress: 0,
+          error: error instanceof Error ? error.message : 'Upload failed',
+          success: false,
+        });
+      }
+    },
+    [router, title, author]
+  );
 
   const handleUpload = useCallback(() => {
     if (selectedFile) {
@@ -133,9 +152,12 @@ export function FileUpload() {
 
       {/* File drop zone */}
       <div
+        role="button"
+        tabIndex={0}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onKeyDown={handleKeyDown}
         className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
           dragOver
             ? 'border-blue-400 bg-blue-50'
@@ -214,6 +236,39 @@ export function FileUpload() {
           )}
         </div>
       </div>
+
+      {/* Document metadata form */}
+      {selectedFile && (
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Document Title *
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter a title for your document"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border px-3 py-2 text-gray-900 bg-white"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="author" className="block text-sm font-medium text-gray-700">
+              Author (optional)
+            </label>
+            <input
+              type="text"
+              id="author"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              placeholder="Enter author name"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border px-3 py-2 text-gray-900 bg-white"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Upload progress */}
       {uploadState.isUploading && (
@@ -310,7 +365,9 @@ export function FileUpload() {
         <button
           type="button"
           onClick={handleUpload}
-          disabled={!selectedFile || uploadState.isUploading || uploadState.success}
+          disabled={
+            !selectedFile || !title.trim() || uploadState.isUploading || uploadState.success
+          }
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {uploadState.isUploading ? 'Uploading...' : 'Upload Document'}
