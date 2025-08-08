@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 type DocumentWithOwner = Document & {
+  ownerId: string;
   owner: {
     name: string | null;
     email: string;
@@ -13,7 +14,7 @@ type DocumentWithOwner = Document & {
 };
 
 export function DocumentList() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [documents, setDocuments] = useState<DocumentWithOwner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +67,8 @@ export function DocumentList() {
   };
 
   const canDeleteDocument = (document: DocumentWithOwner) => {
-    if (!session?.user) return false;
+    // Don't show delete buttons if session is still loading
+    if (status === 'loading' || !session?.user) return false;
     
     // User can delete if they own the document
     if (document.ownerId === session.user.id) return true;

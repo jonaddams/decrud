@@ -24,6 +24,7 @@ export async function GET() {
         fileType: true,
         fileSize: true,
         author: true,
+        ownerId: true,
         createdAt: true,
         updatedAt: true,
         owner: {
