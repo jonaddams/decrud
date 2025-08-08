@@ -54,13 +54,11 @@ class DocumentEngineService {
       }
 
       const result = await response.json();
-      console.log('Document Engine response:', result);
 
       // Document Engine returns the ID in data.document_id according to API docs
       const documentId = result.data?.document_id;
 
       if (!documentId) {
-        console.error('Document Engine response structure:', JSON.stringify(result, null, 2));
         throw new Error('Document Engine did not return a document ID');
       }
 
@@ -210,9 +208,6 @@ class DocumentEngineService {
         lastError = error instanceof Error ? error : new Error('Unknown error');
 
         if (attempt < maxRetries) {
-          console.log(
-            `Document Engine operation failed, retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries + 1})`
-          );
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       }

@@ -15,8 +15,6 @@ type ViewerError = {
 type ViewerInstance = NutrientViewer.Instance;
 
 export function DocumentViewer({ documentId, className = '' }: DocumentViewerProps) {
-  console.log('🎬 DocumentViewer: Component mounting with documentId:', documentId);
-  
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<ViewerInstance | null>(null);
   const [error, setError] = useState<ViewerError | null>(null);
@@ -27,48 +25,34 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
 
   // Fetch the viewer data from our API
   const fetchViewerData = useCallback(async () => {
-    console.log('🔄 fetchViewerData: Starting for documentId:', documentId);
     try {
       setError(null);
 
-      console.log('📡 fetchViewerData: Fetching viewer-url...');
       const response = await fetch(`/api/documents/${documentId}/viewer-url`);
-      console.log('📡 fetchViewerData: viewer-url response:', response.status, response.ok);
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('❌ fetchViewerData: viewer-url error:', errorData);
         throw new Error(errorData.error || 'Failed to get viewer data');
       }
 
       const data = await response.json();
-      console.log('📡 fetchViewerData: viewer-url data received:', { hasJWT: !!data.jwt, jwtLength: data.jwt?.length });
       
       // We need the document Engine ID and JWT for Instant mode
-      console.log('📡 fetchViewerData: Fetching document details...');
       const documentResponse = await fetch(`/api/documents/${documentId}`);
-      console.log('📡 fetchViewerData: document response:', documentResponse.status, documentResponse.ok);
       
       if (!documentResponse.ok) {
-        console.error('❌ fetchViewerData: document error:', documentResponse.status);
         throw new Error('Failed to get document details');
       }
       
       const documentData = await documentResponse.json();
-      console.log('📡 fetchViewerData: document data received:', { 
-        hasDocument: !!documentData.document, 
-        documentEngineId: documentData.document?.documentEngineId 
-      });
       
       const viewerDataToSet = {
         documentEngineId: documentData.document.documentEngineId,
         jwt: data.jwt,
       };
       
-      console.log('✅ fetchViewerData: Setting viewer data:', viewerDataToSet);
       setViewerData(viewerDataToSet);
     } catch (error) {
-      console.error('❌ fetchViewerData: Error:', error);
       setError({
         message: error instanceof Error ? error.message : 'Unknown error',
         code: 'FETCH_ERROR',
@@ -78,55 +62,32 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
 
   // Initialize the Nutrient Viewer using Instant Mode
   const initializeViewer = useCallback(async () => {
-    console.log('🎯 initializeViewer: Starting...', { 
-      hasViewerData: !!viewerData, 
-      hasContainer: !!containerRef.current, 
-      hasNutrientViewer: !!window.NutrientViewer 
-    });
-    
-    if (!viewerData) {
-      console.log('⏸️ initializeViewer: No viewer data, skipping');
-      return;
-    }
-    
-    if (!containerRef.current) {
-      console.log('⏸️ initializeViewer: No container ref, skipping');
-      return;
-    }
-    
-    if (!window.NutrientViewer) {
-      console.log('⏸️ initializeViewer: No NutrientViewer global, skipping');
+    if (!viewerData || !containerRef.current || !window.NutrientViewer) {
       return;
     }
 
     try {
-      console.log('🎯 initializeViewer: All checks passed, initializing...');
       setError(null);
 
-      // Clear any existing viewer instance using NutrientViewer.unload()
+      // Clear any existing viewer instance
       if (instanceRef.current) {
-        console.log('🧹 initializeViewer: Cleaning up previous instance...');
         try {
           await instanceRef.current.unload();
-          console.log('🧹 initializeViewer: Previous instance unloaded');
         } catch (error) {
-          console.warn('⚠️ initializeViewer: Error cleaning up previous instance:', error);
+          console.warn('Error cleaning up previous instance:', error);
         }
         instanceRef.current = null;
       }
 
       // Also try to unload any instance that might be attached to the container directly
       try {
-        console.log('🧹 initializeViewer: Attempting NutrientViewer.unload on container...');
         await window.NutrientViewer.unload(containerRef.current);
-        console.log('🧹 initializeViewer: Container unloaded successfully');
       } catch (error) {
-        console.log('🧹 initializeViewer: No existing instance on container (this is fine):', error.message);
+        // No existing instance, which is fine
       }
 
       // Clear the container
       containerRef.current.innerHTML = '';
-      console.log('🧹 initializeViewer: Container cleared');
 
       const serverUrl = (process.env.NEXT_PUBLIC_DOCUMENT_ENGINE_BASE_URL || 'http://localhost:8585').replace(/\/$/, '') + '/';
       
@@ -137,22 +98,11 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         authPayload: { jwt: viewerData.jwt },
         instant: true,
       };
-      
-      console.log('🚀 initializeViewer: Calling NutrientViewer.load with config:', config);
 
-      // Initialize using Instant Mode (like the working Express sample)
-      const instance = await window.NutrientViewer.load(config).then((instance) => {
-        console.log('✅ initializeViewer: NutrientViewer.load() resolved successfully', instance);
-        return instance;
-      }).catch((error) => {
-        console.error('❌ initializeViewer: NutrientViewer.load() rejected:', error);
-        throw error;
-      });
-
+      // Initialize using Instant Mode
+      const instance = await window.NutrientViewer.load(config);
       instanceRef.current = instance;
-      console.log('✅ initializeViewer: Instance stored in ref');
     } catch (error) {
-      console.error('❌ initializeViewer: Failed to initialize NutrientViewer:', error);
       setError({
         message: error instanceof Error ? error.message : 'Failed to load document viewer',
         code: 'VIEWER_ERROR',
@@ -177,57 +127,38 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
     // Also try to unload from container directly
     if (containerRef.current && window.NutrientViewer) {
       try {
-        window.NutrientViewer.unload(containerRef.current).catch((error) => {
-          console.log('Container cleanup: no instance found (this is fine)');
+        window.NutrientViewer.unload(containerRef.current).catch(() => {
+          // No instance found, which is fine
         });
       } catch (error) {
-        console.log('Container cleanup: no instance found (this is fine)');
+        // No instance found, which is fine
       }
     }
   }, []);
 
   // Effect to fetch viewer data
   useEffect(() => {
-    console.log('🔄 useEffect: Fetching viewer data on mount');
     fetchViewerData();
   }, [fetchViewerData]);
 
   // Effect to initialize viewer when data is available
   useEffect(() => {
-    console.log('🔄 useEffect: viewerData changed:', { hasData: !!viewerData });
     if (viewerData) {
-      console.log('🔄 useEffect: viewerData available, checking for NutrientViewer and container...');
       // Wait for both NutrientViewer and container to be available
       let retryCount = 0;
       const maxRetries = 100; // 5 seconds max
       
       const checkAndInit = () => {
-        console.log(`🔄 checkAndInit: Checking availability (attempt ${retryCount + 1}/${maxRetries})...`, { 
-          hasNutrientViewer: !!window.NutrientViewer, 
-          hasContainer: !!containerRef.current,
-          containerRefType: typeof containerRef.current,
-          containerRefValue: containerRef.current
-        });
-        
         if (window.NutrientViewer && containerRef.current) {
           // Also check that the container has computed dimensions
           const containerRect = containerRef.current.getBoundingClientRect();
-          console.log('📐 checkAndInit: Container dimensions:', { 
-            width: containerRect.width, 
-            height: containerRect.height,
-            offsetWidth: containerRef.current.offsetWidth,
-            offsetHeight: containerRef.current.offsetHeight
-          });
           
           if (containerRect.width > 0 && containerRect.height > 0) {
-            console.log('✅ checkAndInit: All conditions met (NutrientViewer, container, dimensions), initializing...');
             initializeViewer();
           } else if (retryCount < maxRetries) {
             retryCount++;
-            console.log(`⏳ checkAndInit: Container has no dimensions, retrying in 50ms (${retryCount}/${maxRetries})...`);
             setTimeout(checkAndInit, 50);
           } else {
-            console.error('❌ checkAndInit: Container never gained dimensions after', maxRetries * 50, 'ms');
             setError({
               message: 'Failed to initialize document viewer: container has no dimensions',
               code: 'CONTAINER_SIZE_ERROR',
@@ -235,10 +166,8 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
           }
         } else if (retryCount < maxRetries) {
           retryCount++;
-          console.log(`⏳ checkAndInit: Missing dependencies, retrying in 50ms (${retryCount}/${maxRetries})...`);
           setTimeout(checkAndInit, 50);
         } else {
-          console.error('❌ checkAndInit: Timeout waiting for container after', maxRetries * 50, 'ms');
           setError({
             message: 'Failed to initialize document viewer: container not available',
             code: 'CONTAINER_ERROR',
@@ -246,8 +175,6 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         }
       };
       checkAndInit();
-    } else {
-      console.log('⏸️ useEffect: No viewerData, skipping initialization');
     }
   }, [viewerData, initializeViewer]);
 
