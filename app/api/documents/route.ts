@@ -39,7 +39,13 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ documents });
+    // Convert BigInt fileSize to string for JSON serialization
+    const serializedDocuments = documents.map(doc => ({
+      ...doc,
+      fileSize: doc.fileSize?.toString(),
+    }));
+
+    return NextResponse.json({ documents: serializedDocuments });
   } catch (error) {
     console.error('GET /api/documents error:', error);
 

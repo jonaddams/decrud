@@ -17,6 +17,8 @@ declare namespace NutrientViewer {
     serverUrl?: string;
     documentId?: string;
     jwt?: string;
+    authPayload?: { jwt: string };
+    instant?: boolean;
     
     // UI Configuration
     toolbarItems?: ToolbarItem[];
