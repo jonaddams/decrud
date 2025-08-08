@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { PrismaClient } from '@prisma/client';
 import { requireAuth, getEffectiveDocumentFilter } from '@/lib/auth';
 import { DocumentViewer } from '@/components/document-viewer';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const prisma = new PrismaClient();
 
@@ -65,19 +66,19 @@ export default async function DocumentView({ params }: { params: Promise<Params>
     };
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-surface">
         {/* Header */}
-        <div className="bg-white shadow">
+        <div className="bg-background shadow border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center space-x-4">
+            <div className="flex justify-between items-center py-4 sm:py-6">
+              <div className="flex items-center space-x-2 sm:space-x-4">
                 <Link
                   href="/dashboard"
-                  className="text-blue-600 hover:text-blue-500"
+                  className="text-primary hover:text-primary-hover transition-colors cursor-pointer"
                   aria-label="Back to dashboard"
                 >
                   <svg
-                    className="h-6 w-6"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -92,15 +93,20 @@ export default async function DocumentView({ params }: { params: Promise<Params>
                     />
                   </svg>
                 </Link>
-                <h1 className="text-2xl font-bold text-gray-900">{document.title}</h1>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-500">
-                  {session.user.name || session.user.email}
-                </span>
-                <Link href="/api/auth/signout" className="text-sm text-blue-600 hover:text-blue-500">
-                  Sign out
-                </Link>
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <ThemeToggle />
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                  <span className="text-xs sm:text-sm text-muted truncate max-w-20 sm:max-w-none">
+                    {session.user.name || session.user.email}
+                  </span>
+                  <Link
+                    href="/api/auth/signout"
+                    className="text-xs sm:text-sm text-primary hover:text-primary-hover transition-colors cursor-pointer"
+                  >
+                    Sign out
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -108,51 +114,35 @@ export default async function DocumentView({ params }: { params: Promise<Params>
 
         {/* Main content */}
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            {/* Document metadata */}
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Document Information</h3>
-                  <dl className="space-y-3">
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Name</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{document.title}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">File Size</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{formatFileSize(document.fileSize)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">File Type</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{document.fileType}</dd>
-                    </div>
-                  </dl>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Information</h3>
-                  <dl className="space-y-3">
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Uploaded by</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {document.owner.name || document.owner.email}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Upload Date</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{formatDate(document.createdAt)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{formatDate(document.updatedAt)}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
+          <div className="px-4 sm:px-0">
+            {/* Document metadata - Compact table format */}
+            <div className="bg-background shadow rounded-lg border border-border p-3 mb-3">
+              <table className="w-full text-xs">
+                <tbody className="divide-y divide-border">
+                  <tr>
+                    <td className="py-1.5 font-medium text-muted w-20">Title</td>
+                    <td className="py-1.5 text-foreground font-medium" colSpan={3}>{document.title}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 font-medium text-muted w-20">Size</td>
+                    <td className="py-1.5 text-foreground w-20">{formatFileSize(document.fileSize)}</td>
+                    <td className="py-1.5 font-medium text-muted w-24">Uploaded by</td>
+                    <td className="py-1.5 text-foreground">{document.owner.name || document.owner.email}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 font-medium text-muted">Created</td>
+                    <td className="py-1.5 text-foreground" colSpan={3}>{formatDate(document.createdAt)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 font-medium text-muted">Type</td>
+                    <td className="py-1.5 text-foreground break-all" colSpan={3}>{document.fileType}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             {/* Document viewer */}
-            <DocumentViewer documentId={document.id} className="min-h-[700px]" />
+            <DocumentViewer documentId={document.id} className="h-[calc(100vh-240px)]" />
           </div>
         </div>
       </div>

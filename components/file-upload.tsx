@@ -144,8 +144,8 @@ export function FileUpload() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-medium text-gray-900">Select a document to upload</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-medium text-foreground">Select a document to upload</h2>
+        <p className="mt-1 text-sm text-muted">
           Supported formats: PDF, Word documents, images, and other common file types.
         </p>
       </div>
@@ -158,19 +158,19 @@ export function FileUpload() {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onKeyDown={handleKeyDown}
-        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer ${
           dragOver
-            ? 'border-blue-400 bg-blue-50'
+            ? 'border-primary bg-primary/10'
             : selectedFile
-              ? 'border-green-300 bg-green-50'
-              : 'border-gray-300 hover:border-gray-400'
+              ? 'border-success bg-success/10'
+              : 'border-border hover:border-primary/50'
         }`}
       >
         <div className="text-center">
           {selectedFile ? (
             <div className="space-y-2">
               <svg
-                className="mx-auto h-12 w-12 text-green-400"
+                className="mx-auto h-12 w-12 text-success"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -184,9 +184,9 @@ export function FileUpload() {
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <div className="text-sm text-gray-900">
+              <div className="text-sm text-foreground">
                 <p className="font-medium">{selectedFile.name}</p>
-                <p className="text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                <p className="text-muted">{formatFileSize(selectedFile.size)}</p>
               </div>
               <button
                 type="button"
@@ -194,7 +194,7 @@ export function FileUpload() {
                   setSelectedFile(null);
                   resetUploadState();
                 }}
-                className="text-sm text-blue-600 hover:text-blue-500"
+                className="text-sm text-primary hover:text-primary-hover transition-colors cursor-pointer"
               >
                 Choose different file
               </button>
@@ -202,7 +202,7 @@ export function FileUpload() {
           ) : (
             <div className="space-y-2">
               <svg
-                className="mx-auto h-12 w-12 text-gray-400"
+                className="mx-auto h-12 w-12 text-subtle"
                 stroke="currentColor"
                 fill="none"
                 viewBox="0 0 48 48"
@@ -216,9 +216,9 @@ export function FileUpload() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted">
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <span className="font-medium text-blue-600 hover:text-blue-500">
+                  <span className="font-medium text-primary hover:text-primary-hover transition-colors">
                     Click to upload
                   </span>
                   <span> or drag and drop</span>
@@ -231,7 +231,7 @@ export function FileUpload() {
                   />
                 </label>
               </div>
-              <p className="text-xs text-gray-500">Up to 10MB</p>
+              <p className="text-xs text-muted">Up to 250MB</p>
             </div>
           )}
         </div>
@@ -241,7 +241,7 @@ export function FileUpload() {
       {selectedFile && (
         <div className="space-y-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="title" className="block text-sm font-medium text-foreground">
               Document Title *
             </label>
             <input
@@ -250,12 +250,12 @@ export function FileUpload() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter a title for your document"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border px-3 py-2 text-gray-900 bg-white"
+              className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
               required
             />
           </div>
           <div>
-            <label htmlFor="author" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="author" className="block text-sm font-medium text-foreground">
               Author (optional)
             </label>
             <input
@@ -264,7 +264,7 @@ export function FileUpload() {
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
               placeholder="Enter author name"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border px-3 py-2 text-gray-900 bg-white"
+              className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
             />
           </div>
         </div>
@@ -273,13 +273,13 @@ export function FileUpload() {
       {/* Upload progress */}
       {uploadState.isUploading && (
         <div className="space-y-2">
-          <div className="flex justify-between text-sm text-gray-600">
+          <div className="flex justify-between text-sm text-foreground">
             <span>Uploading...</span>
             <span>{uploadState.progress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-surface rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${uploadState.progress}%` }}
             />
           </div>
@@ -288,11 +288,11 @@ export function FileUpload() {
 
       {/* Success message */}
       {uploadState.success && (
-        <div className="rounded-md bg-green-50 p-4">
+        <div className="rounded-md bg-success/10 border border-success/20 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-green-400"
+                className="h-5 w-5 text-success"
                 viewBox="0 0 20 20"
                 fill="currentColor"
                 aria-hidden="true"
@@ -306,8 +306,8 @@ export function FileUpload() {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">Upload successful!</h3>
-              <div className="mt-2 text-sm text-green-700">
+              <h3 className="text-sm font-medium text-success">Upload successful!</h3>
+              <div className="mt-2 text-sm text-success/90">
                 <p>Your document has been uploaded. Redirecting to document view...</p>
               </div>
             </div>
@@ -317,11 +317,11 @@ export function FileUpload() {
 
       {/* Error message */}
       {uploadState.error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-error/10 border border-error/20 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-red-400"
+                className="h-5 w-5 text-error"
                 viewBox="0 0 20 20"
                 fill="currentColor"
                 aria-hidden="true"
@@ -335,15 +335,15 @@ export function FileUpload() {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Upload failed</h3>
-              <div className="mt-2 text-sm text-red-700">
+              <h3 className="text-sm font-medium text-error">Upload failed</h3>
+              <div className="mt-2 text-sm text-error/90">
                 <p>{uploadState.error}</p>
               </div>
               <div className="mt-4">
                 <button
                   type="button"
                   onClick={resetUploadState}
-                  className="bg-red-100 px-3 py-2 text-sm font-medium text-red-800 hover:bg-red-200 rounded-md"
+                  className="bg-error/10 hover:bg-error/20 px-3 py-2 text-sm font-medium text-error rounded-md transition-colors cursor-pointer"
                 >
                   Try again
                 </button>
@@ -354,11 +354,11 @@ export function FileUpload() {
       )}
 
       {/* Action buttons */}
-      <div className="flex justify-between">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-0">
         <button
           type="button"
           onClick={() => router.back()}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center justify-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-foreground bg-background hover:bg-surface focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-colors cursor-pointer"
         >
           Cancel
         </button>
@@ -368,7 +368,7 @@ export function FileUpload() {
           disabled={
             !selectedFile || !title.trim() || uploadState.isUploading || uploadState.success
           }
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
         >
           {uploadState.isUploading ? 'Uploading...' : 'Upload Document'}
         </button>

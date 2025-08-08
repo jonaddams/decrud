@@ -182,7 +182,57 @@ export function DocumentList() {
 
   return (
     <>
-      <div className="overflow-hidden shadow ring-1 ring-border md:rounded-lg">
+      {/* Mobile card layout */}
+      <div className="block md:hidden">
+        <div className="space-y-4">
+          {documents.map((document) => (
+            <div
+              key={document.id}
+              className="bg-background border border-border rounded-lg p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-sm font-medium text-foreground truncate pr-2">
+                  {document.title}
+                </h3>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <Link
+                    href={`/documents/${document.id}`}
+                    className="text-primary hover:text-primary-hover transition-colors cursor-pointer text-sm"
+                  >
+                    View
+                  </Link>
+                  {canDeleteDocument(document) && (
+                    <button
+                      onClick={() => handleDeleteClick(document)}
+                      className="text-error hover:text-error/80 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
+                      disabled={isDeleting}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted">Size</span>
+                  <span className="text-foreground">{formatFileSize(document.fileSize)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted">Uploaded by</span>
+                  <span className="text-foreground truncate ml-2">{document.owner.name || document.owner.email}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted">Created</span>
+                  <span className="text-foreground">{formatDate(document.createdAt)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="hidden md:block overflow-hidden shadow ring-1 ring-border md:rounded-lg">
         <table className="min-w-full divide-y divide-border">
           <thead className="bg-surface">
             <tr>

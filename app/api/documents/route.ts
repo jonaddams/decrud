@@ -8,14 +8,52 @@ const prisma = new PrismaClient();
 /**
  * GET /api/documents
  * List all documents for the current user (with role-based filtering)
+ * Supports search, filtering, and sorting query parameters
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth();
-    const filter = getEffectiveDocumentFilter(session.user);
+    const baseFilter = getEffectiveDocumentFilter(session.user);
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search')?.trim();
+    const fileType = searchParams.get('fileType')?.trim();
+    const author = searchParams.get('author')?.trim();
+    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+
+    // Build where clause with search and filters
+    const whereClause: any = { ...baseFilter };
+
+    // Add search functionality - search across title, filename, and author
+    if (search) {
+      whereClause.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { filename: { contains: search, mode: 'insensitive' } },
+        { author: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Add file type filter
+    if (fileType && fileType !== 'all') {
+      whereClause.fileType = { contains: fileType, mode: 'insensitive' };
+    }
+
+    // Add author filter
+    if (author && author !== 'all') {
+      whereClause.author = { contains: author, mode: 'insensitive' };
+    }
+
+    // Validate and set sort parameters
+    const validSortFields = ['title', 'filename', 'fileType', 'fileSize', 'author', 'createdAt', 'updatedAt'];
+    const validSortOrders = ['asc', 'desc'];
+    
+    const finalSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const finalSortOrder = validSortOrders.includes(sortOrder) ? sortOrder : 'desc';
 
     const documents = await prisma.document.findMany({
-      where: filter,
+      where: whereClause,
       select: {
         id: true,
         documentEngineId: true,
@@ -36,7 +74,7 @@ export async function GET() {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        [finalSortBy]: finalSortOrder,
       },
     });
 
@@ -80,10 +118,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
-    // Validate file size (10MB limit)
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    // Validate file size (250MB limit)
+    const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File size must be less than 10MB' }, { status: 400 });
+      return NextResponse.json({ error: 'File size must be less than 250MB' }, { status: 400 });
     }
 
     // Upload to Document Engine with retry logic
