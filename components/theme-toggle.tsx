@@ -1,9 +1,24 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useTheme } from '@/components/providers/theme-provider';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="p-2 w-9 h-9 rounded-md" aria-hidden="true">
+        {/* Placeholder to prevent layout shift */}
+      </div>
+    );
+  }
 
   return (
     <button

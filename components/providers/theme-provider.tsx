@@ -53,13 +53,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setThemeState(newTheme);
   };
 
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return <>{children}</>;
-  }
+  // Provide context even before mounting to prevent errors
+  const contextValue = {
+    theme: mounted ? theme : 'light' as Theme,
+    toggleTheme,
+    setTheme,
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );
