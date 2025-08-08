@@ -82,7 +82,7 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
       // Also try to unload any instance that might be attached to the container directly
       try {
         await window.NutrientViewer.unload(containerRef.current);
-      } catch (error) {
+      } catch {
         // No existing instance, which is fine
       }
 
@@ -130,7 +130,7 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         window.NutrientViewer.unload(containerRef.current).catch(() => {
           // No instance found, which is fine
         });
-      } catch (error) {
+      } catch {
         // No instance found, which is fine
       }
     }

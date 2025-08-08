@@ -2,6 +2,9 @@
 declare namespace NutrientViewer {
   // Main load function
   function load(configuration: Configuration): Promise<Instance>;
+  
+  // Static unload function for cleanup
+  function unload(container: HTMLElement): Promise<void>;
 
   // Configuration interface for NutrientViewer.load()
   interface Configuration {
