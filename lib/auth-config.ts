@@ -14,11 +14,22 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user }) {
+      // Only allow users with nutrient.io or pspdfkit.com email domains
+      if (!user.email) {
+        return false;
+      }
+
+      const allowedDomains = ['nutrient.io', 'pspdfkit.com'];
+      const emailDomain = user.email.split('@')[1];
+
+      return allowedDomains.includes(emailDomain);
+    },
     async session({ session, user }) {
       if (session.user) {
         // Add user ID and role to session
         const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
+          where: { email: user.email || '' },
           select: {
             id: true,
             role: true,

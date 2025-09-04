@@ -1,23 +1,23 @@
-(function() {
-  const scrollButton = document.getElementById("scrollToTopBtn");
+(() => {
+  const scrollButton = document.getElementById('scrollToTopBtn');
   const threshold = 30;
 
   setButtonPosition();
 
-  window.onscroll = function() {
+  window.onscroll = () => {
     setButtonPosition();
   };
 
   function setButtonPosition() {
     if (document.body.scrollTop > threshold || document.documentElement.scrollTop > threshold) {
-      scrollButton.style.display = "block";
+      scrollButton.style.display = 'block';
     } else {
-      scrollButton.style.display = "none";
+      scrollButton.style.display = 'none';
     }
   }
 
-  scrollButton.onclick = function() {
+  scrollButton.onclick = () => {
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
   };
-})()
+})();

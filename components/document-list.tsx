@@ -2,8 +2,8 @@
 
 import type { Document } from '@prisma/client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 
 type DocumentWithOwner = Document & {
   ownerId: string;
@@ -69,15 +69,15 @@ export function DocumentList() {
   const canDeleteDocument = (document: DocumentWithOwner) => {
     // Don't show delete buttons if session is still loading
     if (status === 'loading' || !session?.user) return false;
-    
+
     // User can delete if they own the document
     if (document.ownerId === session.user.id) return true;
-    
+
     // Admin can delete any document when in ADMIN mode
     if (session.user.role === 'ADMIN' && session.user.currentImpersonationMode === 'ADMIN') {
       return true;
     }
-    
+
     return false;
   };
 
@@ -93,7 +93,7 @@ export function DocumentList() {
 
     try {
       setIsDeleting(true);
-      
+
       const response = await fetch(`/api/documents/${deleteConfirmation.documentId}`, {
         method: 'DELETE',
       });
@@ -104,7 +104,7 @@ export function DocumentList() {
       }
 
       // Remove the document from the local state
-      setDocuments(prev => prev.filter(doc => doc.id !== deleteConfirmation.documentId));
+      setDocuments((prev) => prev.filter((doc) => doc.id !== deleteConfirmation.documentId));
       setDeleteConfirmation(null);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete document');
@@ -219,7 +219,9 @@ export function DocumentList() {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-muted">Uploaded by</span>
-                  <span className="text-foreground truncate ml-2">{document.owner.name || document.owner.email}</span>
+                  <span className="text-foreground truncate ml-2">
+                    {document.owner.name || document.owner.email}
+                  </span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-muted">Created</span>
@@ -329,7 +331,8 @@ export function DocumentList() {
                 <h3 className="text-lg font-medium text-foreground">Delete Document</h3>
                 <div className="mt-2">
                   <p className="text-sm text-muted">
-                    Are you sure you want to delete &ldquo;{deleteConfirmation.documentTitle}&rdquo;? This action cannot be undone.
+                    Are you sure you want to delete &ldquo;{deleteConfirmation.documentTitle}
+                    &rdquo;? This action cannot be undone.
                   </p>
                 </div>
               </div>

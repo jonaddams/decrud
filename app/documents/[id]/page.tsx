@@ -1,9 +1,9 @@
+import { PrismaClient } from '@prisma/client';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
-import { requireAuth, getEffectiveDocumentFilter } from '@/lib/auth';
 import { DocumentViewer } from '@/components/document-viewer';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -121,21 +121,31 @@ export default async function DocumentView({ params }: { params: Promise<Params>
                 <tbody className="divide-y divide-border">
                   <tr>
                     <td className="py-1.5 font-medium text-muted w-20">Title</td>
-                    <td className="py-1.5 text-foreground font-medium" colSpan={3}>{document.title}</td>
+                    <td className="py-1.5 text-foreground font-medium" colSpan={3}>
+                      {document.title}
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-1.5 font-medium text-muted w-20">Size</td>
-                    <td className="py-1.5 text-foreground w-20">{formatFileSize(document.fileSize)}</td>
+                    <td className="py-1.5 text-foreground w-20">
+                      {formatFileSize(document.fileSize)}
+                    </td>
                     <td className="py-1.5 font-medium text-muted w-24">Uploaded by</td>
-                    <td className="py-1.5 text-foreground">{document.owner.name || document.owner.email}</td>
+                    <td className="py-1.5 text-foreground">
+                      {document.owner.name || document.owner.email}
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-1.5 font-medium text-muted">Created</td>
-                    <td className="py-1.5 text-foreground" colSpan={3}>{formatDate(document.createdAt)}</td>
+                    <td className="py-1.5 text-foreground" colSpan={3}>
+                      {formatDate(document.createdAt)}
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-1.5 font-medium text-muted">Type</td>
-                    <td className="py-1.5 text-foreground break-all" colSpan={3}>{document.fileType}</td>
+                    <td className="py-1.5 text-foreground break-all" colSpan={3}>
+                      {document.fileType}
+                    </td>
                   </tr>
                 </tbody>
               </table>

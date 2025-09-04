@@ -46,9 +46,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate and set sort parameters
-    const validSortFields = ['title', 'filename', 'fileType', 'fileSize', 'author', 'createdAt', 'updatedAt'];
+    const validSortFields = [
+      'title',
+      'filename',
+      'fileType',
+      'fileSize',
+      'author',
+      'createdAt',
+      'updatedAt',
+    ];
     const validSortOrders = ['asc', 'desc'];
-    
+
     const finalSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     const finalSortOrder = validSortOrders.includes(sortOrder) ? sortOrder : 'desc';
 
@@ -79,7 +87,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Convert BigInt fileSize to string for JSON serialization
-    const serializedDocuments = documents.map(doc => ({
+    const serializedDocuments = documents.map((doc) => ({
       ...doc,
       fileSize: doc.fileSize?.toString(),
     }));

@@ -29,28 +29,28 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
       setError(null);
 
       const response = await fetch(`/api/documents/${documentId}/viewer-url`);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to get viewer data');
       }
 
       const data = await response.json();
-      
+
       // We need the document Engine ID and JWT for Instant mode
       const documentResponse = await fetch(`/api/documents/${documentId}`);
-      
+
       if (!documentResponse.ok) {
         throw new Error('Failed to get document details');
       }
-      
+
       const documentData = await documentResponse.json();
-      
+
       const viewerDataToSet = {
         documentEngineId: documentData.document.documentEngineId,
         jwt: data.jwt,
       };
-      
+
       setViewerData(viewerDataToSet);
     } catch (error) {
       setError({
@@ -89,8 +89,12 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
       // Clear the container
       containerRef.current.innerHTML = '';
 
-      const serverUrl = (process.env.NEXT_PUBLIC_DOCUMENT_ENGINE_BASE_URL || 'http://localhost:8585').replace(/\/$/, '') + '/';
-      
+      const serverUrl =
+        (process.env.NEXT_PUBLIC_DOCUMENT_ENGINE_BASE_URL || 'http://localhost:8585').replace(
+          /\/$/,
+          ''
+        ) + '/';
+
       const config = {
         serverUrl,
         container: containerRef.current,
@@ -147,12 +151,12 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
       // Wait for both NutrientViewer and container to be available
       let retryCount = 0;
       const maxRetries = 100; // 5 seconds max
-      
+
       const checkAndInit = () => {
         if (window.NutrientViewer && containerRef.current) {
           // Also check that the container has computed dimensions
           const containerRect = containerRef.current.getBoundingClientRect();
-          
+
           if (containerRect.width > 0 && containerRect.height > 0) {
             initializeViewer();
           } else if (retryCount < maxRetries) {
@@ -191,7 +195,9 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
 
   if (error) {
     return (
-      <div className={`flex items-center justify-center bg-surface rounded-lg border-2 border-dashed border-border ${className}`}>
+      <div
+        className={`flex items-center justify-center bg-surface rounded-lg border-2 border-dashed border-border ${className}`}
+      >
         <div className="text-center p-6">
           <svg
             className="mx-auto h-12 w-12 text-error"
@@ -225,15 +231,18 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
   }
 
   return (
-    <div className={`bg-background rounded-lg shadow-sm border border-border ${className}`} style={{ position: 'relative' }}>
+    <div
+      className={`bg-background rounded-lg shadow-sm border border-border ${className}`}
+      style={{ position: 'relative' }}
+    >
       {/* NutrientViewer container - it handles its own loading state */}
       <div
         ref={containerRef}
         className="w-full h-full rounded-lg"
-        style={{ 
+        style={{
           width: '100%',
           height: '100%',
-          position: 'relative'
+          position: 'relative',
         }}
       />
     </div>

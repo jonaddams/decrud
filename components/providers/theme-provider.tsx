@@ -23,10 +23,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Hydration fix - only run on client
   useEffect(() => {
     setMounted(true);
-    
+
     // Check localStorage for saved theme preference
     const savedTheme = localStorage.getItem('theme') as Theme | null;
-    
+
     if (savedTheme) {
       setThemeState(savedTheme);
     } else {
@@ -39,14 +39,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Update document class and localStorage when theme changes
   useEffect(() => {
     if (!mounted) return;
-    
+
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
     localStorage.setItem('theme', theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {
-    setThemeState(prev => prev === 'light' ? 'dark' : 'light');
+    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const setTheme = (newTheme: Theme) => {
@@ -55,16 +55,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   // Provide context even before mounting to prevent errors
   const contextValue = {
-    theme: mounted ? theme : 'light' as Theme,
+    theme: mounted ? theme : ('light' as Theme),
     toggleTheme,
     setTheme,
   };
 
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

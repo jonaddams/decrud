@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { DocumentList } from '@/components/document-list';
 import { DashboardHeader } from '@/components/dashboard-header';
+import { DocumentList } from '@/components/document-list';
 import { requireAuth } from '@/lib/auth';
 
 export default async function Dashboard() {

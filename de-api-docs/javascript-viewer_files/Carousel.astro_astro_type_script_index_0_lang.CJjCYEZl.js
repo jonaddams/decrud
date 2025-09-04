@@ -1,1 +1,806 @@
-class S{carousel;track;originalItems;items;prevButton;nextButton;dotsContainer;scrollbarThumb;config;currentIndex;totalSlides;autoplayInterval;isDragging;startX;currentX;initialTransform;itemWidth;slidePositions;isInfinite;currentSlideIndex;activeStartIndex;isTransitioning;hasDragged;lastArrowClickTime;constructor(t){this.carousel=t,this.track=t.querySelector("[data-carousel-track]"),this.originalItems=Array.from(this.track.children),this.items=[...this.originalItems],this.prevButton=t.querySelector("[data-carousel-prev]"),this.nextButton=t.querySelector("[data-carousel-next]"),this.dotsContainer=t.querySelector("[data-carousel-dots]"),this.scrollbarThumb=t.querySelector("[data-carousel-scrollbar-thumb]"),this.config=this.getConfig(),this.currentIndex=0,this.totalSlides=0,this.autoplayInterval=null,this.isDragging=!1,this.startX=0,this.currentX=0,this.initialTransform=0,this.itemWidth=0,this.slidePositions=[],this.isInfinite=!1,this.currentSlideIndex=0,this.activeStartIndex=0,this.isTransitioning=!1,this.hasDragged=!1,this.lastArrowClickTime=0,this.init()}getConfig(){const t=this.carousel.dataset,e=JSON.parse(t.responsive||"[]");return{itemsToShow:parseInt(t.itemsToShow||"1")||1,itemsToScroll:parseInt(t.itemsToScroll||"1")||1,infinite:t.infinite==="true",autoplay:t.autoplay==="true",autoplaySpeed:parseInt(t.autoplaySpeed||"3000")||3e3,speed:parseInt(t.speed||"300")||300,adaptiveHeight:t.adaptiveHeight==="true",draggable:t.draggable==="true",swipeable:t.swipeable==="true",pauseOnHover:t.pauseOnHover==="true",responsive:e,gap:t.gap||"1rem"}}init(){this.calculateDimensions(),this.config.infinite&&this.setupInfinite(),this.setupResponsive(),this.createDots(),this.setupEventListeners(),this.updateCarousel(),this.config.autoplay&&this.startAutoplay(),this.config.adaptiveHeight&&this.updateHeight()}calculateDimensions(){const t=this.carousel.querySelector(".carousel-container").offsetWidth,e=this.getCurrentConfig(),i=this.parseGap(e.gap),s=(e.itemsToShow-1)*i;if(this.itemWidth=(t-s)/e.itemsToShow,this.carousel.querySelectorAll(".carousel-item").forEach(n=>{n.style.width=`${this.itemWidth}px`,n.style.flexShrink="0"}),this.carousel.offsetHeight,this.config.infinite)this.calculateSlidePositions(),this.totalSlides=this.originalItems.length;else{const n=e.itemsToShow;this.items.length<=n?this.totalSlides=1:(this.calculateSlidePositions(),this.totalSlides=this.slidePositions.length)}if(this.config.infinite){const n=this.items.length;this.track.style.width=`${n*this.itemWidth+(n-1)*i}px`}this.updatePosition()}refreshAllItems(){this.carousel.querySelectorAll(".carousel-item").forEach(e=>{e.style.width=`${this.itemWidth}px`,e.style.flexShrink="0"})}updatePosition(){this.config.infinite?this.updateInfinitePosition():this.updateCarouselTransform()}parseGap(t){return t.includes("rem")||t.includes("em")?parseFloat(t)*16:t.includes("px")?parseFloat(t):parseFloat(t)||0}getCurrentConfig(){const t=window.innerWidth,e={...this.config};for(const i of this.config.responsive)if(t<=i.breakpoint){e.itemsToShow=i.itemsToShow,e.itemsToScroll=i.itemsToScroll||e.itemsToScroll;break}return this.config.itemsToShow>=2&&this.config.responsive.length===0&&(t<=768?(e.itemsToShow=1,e.itemsToScroll=1):t<=992&&this.config.itemsToShow>2&&(e.itemsToShow=2,e.itemsToScroll=Math.min(2,this.config.itemsToScroll))),e}setupResponsive(){new ResizeObserver(e=>{for(const i of e)if(i.target===this.carousel){const s=this.config.infinite?this.currentSlideIndex:this.currentIndex,o=this.getCurrentConfig();if(this.calculateDimensions(),this.config.infinite){const n=this.getCurrentConfig();if(o.itemsToShow!==n.itemsToShow)this.setupInfinite();else{this.refreshAllItems();const r=this.parseGap(n.gap),a=-this.activeStartIndex*(this.itemWidth+r);requestAnimationFrame(()=>{this.track.style.transform=`translate3d(${a}px, 0px, 0px)`})}}else this.refreshAllItems(),this.slidePositions&&this.slidePositions.length>0&&(this.currentIndex=Math.min(s,this.slidePositions.length-1)),requestAnimationFrame(()=>{this.updatePosition()});this.updateCarousel(),this.createDots(),this.config.adaptiveHeight&&this.updateHeight()}}).observe(this.carousel)}createDots(){if(!this.dotsContainer)return;this.dotsContainer.innerHTML="";const t=this.getCurrentConfig(),e=this.originalItems?this.originalItems.length:this.items.length,i=t.itemsToShow;if(e<=i){this.dotsContainer.style.display="none";return}else this.dotsContainer.style.display="";const s=this.config.infinite?this.originalItems.length:this.totalSlides;for(let o=0;o<s;o++){const n=document.createElement("button");n.className="carousel-dot",n.setAttribute("aria-label",`Go to slide ${o+1} of ${s}`),n.setAttribute("role","tab"),n.setAttribute("type","button"),n.setAttribute("aria-controls",`${this.carousel.dataset.carouselId}-track`),n.setAttribute("aria-selected","false"),n.setAttribute("tabindex","-1"),this.config.infinite?n.addEventListener("click",()=>this.goToInfiniteSlide(o)):n.addEventListener("click",()=>this.goToSlide(o)),this.dotsContainer.appendChild(n)}this.updateDots()}updateDots(){if(!this.dotsContainer)return;this.dotsContainer.querySelectorAll(".carousel-dot").forEach((e,i)=>{const s=i===this.currentIndex;e.classList.toggle("active",s),e.setAttribute("aria-selected",s.toString()),e.setAttribute("tabindex",s?"0":"-1")})}updateInfiniteScrollbar(){if(!this.scrollbarThumb)return;const t=this.getCurrentConfig(),e=this.originalItems.length,i=t.itemsToShow,s=this.carousel.querySelector(".carousel-scrollbar");if(s)if(e<=i){s.style.display="none";return}else s.style.display="";const o=i/e*100,n=Math.max(8,Math.min(o,95)),r=this.currentSlideIndex/Math.max(1,e-1),a=100-n,l=r*a;this.scrollbarThumb.style.width=`${n}%`,this.scrollbarThumb.style.left=`${l}%`,this.scrollbarThumb.style.transform="none"}updateScrollbar(){if(!this.scrollbarThumb)return;const t=this.getCurrentConfig(),e=this.items.length,i=t.itemsToShow,s=this.carousel.querySelector(".carousel-scrollbar");if(s)if(e<=i){s.style.display="none";return}else s.style.display="";const o=i/e*100,n=Math.max(8,Math.min(o,95)),r=this.getCurrentScrollProgress(),a=100-n,l=r*a;this.scrollbarThumb.style.width=`${n}%`,this.scrollbarThumb.style.left=`${l}%`,this.scrollbarThumb.style.transform="none"}getCurrentScrollProgress(){if(!this.config.infinite&&this.slidePositions&&this.slidePositions.length>0){const a=this.slidePositions.length-1;return a===0?0:this.currentIndex/a}const t=this.getCurrentTransform(),e=this.getCurrentConfig(),i=this.items.length,s=e.itemsToShow,o=this.parseGap(e.gap),n=Math.max(0,(i-s)*(this.itemWidth+o));if(n===0)return 0;const r=Math.abs(t);return Math.min(r/n,1)}setFluidPosition(t){if(!this.slidePositions||this.slidePositions.length===0){this.setDirectPosition(t);return}const e=t*(this.slidePositions.length-1),i=Math.floor(e),s=Math.min(Math.ceil(e),this.slidePositions.length-1),o=e-i,n=this.getCurrentConfig(),r=this.parseGap(n.gap),a=this.itemWidth+r,l=this.slidePositions[i],h=this.slidePositions[s],u=-(l+(h-l)*o)*a;this.track.style.transition="none",this.track.style.transform=`translateX(${u}px)`,this.updateScrollbarThumbPosition(t),this.updateActiveSlideStates();const d=Math.round(e);this.currentIndex=Math.max(0,Math.min(this.slidePositions.length-1,d)),this.updateDots(),this.updateArrows(),requestAnimationFrame(()=>{this.track.style.transition=""})}setDirectPosition(t){const e=this.getCurrentConfig(),i=this.items.length,s=e.itemsToShow,o=this.parseGap(e.gap),n=(i-s)*(this.itemWidth+o),r=-t*n;this.track.style.transition="none",this.track.style.transform=`translateX(${r}px)`,this.updateScrollbarThumbPosition(t),this.updateActiveSlideStates(),requestAnimationFrame(()=>{this.track.style.transition=""})}updateScrollbarThumbPosition(t){if(!this.scrollbarThumb)return;const e=this.getCurrentConfig(),i=this.items.length,o=e.itemsToShow/i*100,r=100-Math.max(8,Math.min(o,95)),a=t*r;this.scrollbarThumb.style.left=`${a}%`}updateActiveSlideStates(){const t=this.getCurrentConfig(),e=t.itemsToShow,i=this.getCurrentTransform(),s=this.parseGap(t.gap),o=this.itemWidth+s,n=Math.floor(Math.abs(i)/o),r=Math.min(n+e-1,this.items.length-1);this.items.forEach((a,l)=>{const h=l>=n&&l<=r;a.setAttribute("aria-hidden",(!h).toString()),a.classList.toggle("carousel-active",h)})}updateHeight(){if(!this.config.adaptiveHeight)return;const t=this.getCurrentConfig(),e=this.getCurrentFirstVisibleItemIndex(),i=Math.min(e+t.itemsToShow-1,this.items.length-1),s=this.items.slice(e,i+1);let o=0;s.forEach(n=>{const r=n.offsetHeight;r>o&&(o=r)}),this.carousel.querySelector(".carousel-container").style.height=`${o}px`}setupEventListeners(){this.prevButton&&this.prevButton.addEventListener("click",()=>{this.handleArrowClick(()=>this.prevSlide())}),this.nextButton&&this.nextButton.addEventListener("click",()=>{this.handleArrowClick(()=>this.nextSlide())}),this.carousel.addEventListener("keydown",t=>{if(t.key==="ArrowLeft")t.preventDefault(),this.prevSlide(),this.announceSlideChange();else if(t.key==="ArrowRight")t.preventDefault(),this.nextSlide(),this.announceSlideChange();else if(t.key==="Home")t.preventDefault(),this.goToSlide(0),this.announceSlideChange();else if(t.key==="End"){t.preventDefault();const e=this.config.infinite?this.originalItems.length-1:this.totalSlides-1;this.goToSlide(e),this.announceSlideChange()}}),(this.config.draggable||this.config.swipeable)&&this.setupDragEvents(),this.track.addEventListener("click",t=>{if(this.hasDragged)return t.preventDefault(),t.stopPropagation(),!1},!0),this.config.autoplay&&this.config.pauseOnHover&&(this.carousel.addEventListener("mouseenter",()=>{this.stopAutoplay(),this.announceAutoplayState("paused")}),this.carousel.addEventListener("mouseleave",()=>{this.startAutoplay(),this.announceAutoplayState("playing")})),this.scrollbarThumb&&this.setupScrollbarDrag()}setupScrollbarDrag(){const t=this.carousel.querySelector(".carousel-scrollbar-track");if(!t)return;let e=!1,i=0,s=0;const o=a=>{a.preventDefault(),e=!0;const l=t.getBoundingClientRect();s=this.getEventX(a),a.target===this.scrollbarThumb?i=this.scrollbarThumb.getBoundingClientRect().left-l.left:(this.updateScrollbarFromPosition(a),i=this.scrollbarThumb.getBoundingClientRect().left-l.left),document.body.style.userSelect="none",this.scrollbarThumb.style.cursor="grabbing"},n=a=>{if(!e||(a.preventDefault(),this.config.infinite))return;const l=t.getBoundingClientRect(),h=this.getEventX(a)-s,c=i+h,u=this.getCurrentConfig(),d=this.items.length,g=u.itemsToShow/d*100,b=Math.max(8,Math.min(g,95)),m=l.width*(100-b)/100,v=Math.max(0,Math.min(m,c)),I=m>0?v/m:0;this.setFluidPosition(I)},r=()=>{e&&(e=!1,document.body.style.userSelect="",this.scrollbarThumb.style.cursor="grab")};t.addEventListener("mousedown",o),this.scrollbarThumb.addEventListener("mousedown",o),document.addEventListener("mousemove",n),document.addEventListener("mouseup",r),t.addEventListener("touchstart",o,{passive:!1}),this.scrollbarThumb.addEventListener("touchstart",o,{passive:!1}),document.addEventListener("touchmove",n,{passive:!1}),document.addEventListener("touchend",r,{passive:!0}),t.addEventListener("selectstart",a=>a.preventDefault()),this.scrollbarThumb.addEventListener("selectstart",a=>a.preventDefault())}updateScrollbarFromPosition(t){const i=this.carousel.querySelector(".carousel-scrollbar-track").getBoundingClientRect(),s=this.getEventX(t)-i.left;if(this.config.infinite)return;const o=this.getCurrentConfig(),n=this.items.length,a=o.itemsToShow/n*100,l=Math.max(8,Math.min(a,95)),h=i.width,c=h*(100-l)/100,u=h*l/100,d=s-u/2,p=Math.max(0,Math.min(c,d)),g=c>0?p/c:0;this.setFluidPosition(g)}setupDragEvents(){this.config.draggable&&(this.track.addEventListener("mousedown",t=>this.dragStart(t)),document.addEventListener("mousemove",t=>this.dragMove(t)),document.addEventListener("mouseup",t=>this.dragEnd(t)),this.track.addEventListener("dragstart",t=>t.preventDefault()),this.track.addEventListener("selectstart",t=>t.preventDefault()),this.track.addEventListener("contextmenu",t=>{this.isDragging&&t.preventDefault()})),this.config.swipeable&&(this.track.addEventListener("touchstart",t=>this.dragStart(t),{passive:!1}),document.addEventListener("touchmove",t=>this.dragMove(t),{passive:!1}),document.addEventListener("touchend",t=>this.dragEnd(t),{passive:!0}))}dragStart(t){if(t.target.matches("button, input, select, textarea, a"))return;t.preventDefault(),this.isDragging=!0,this.hasDragged=!1,this.track.classList.add("dragging"),this.startX=this.getEventX(t),this.track.querySelector("a")!==null&&(this.currentX=this.startX),this.initialTransform=this.getCurrentTransform(),document.body.style.userSelect="none",this.config.autoplay&&this.stopAutoplay()}dragMove(t){if(!this.isDragging)return;t.preventDefault(),this.currentX=this.getEventX(t);const e=this.currentX-this.startX;Math.abs(e)>5&&(this.hasDragged=!0);let i=e;const s=this.getCurrentConfig();if(!this.config.infinite){const n=-(this.items.length-s.itemsToShow)*(this.itemWidth+this.parseGap(s.gap));if(this.initialTransform+e>0)i=e*.3;else if(this.initialTransform+e<n){const r=this.initialTransform+e-n;i=e-r*.7}}const o=this.initialTransform+i;this.config.infinite?this.track.style.transform=`translate3d(${o}px, 0px, 0px)`:this.track.style.transform=`translateX(${o}px)`}dragEnd(t){if(!this.isDragging)return;this.isDragging=!1,this.track.classList.remove("dragging"),document.body.style.userSelect="";const e=this.currentX-this.startX;Math.abs(e)>50?e>0?this.prevSlide():this.nextSlide():this.config.infinite?this.updateInfinitePosition():this.updateCarousel(),setTimeout(()=>{this.hasDragged=!1},10),this.config.autoplay&&this.config.pauseOnHover&&this.startAutoplay()}getEventX(t){if(t.type.includes("touch")){const e=t;return e.touches&&e.touches[0]?e.touches[0].clientX:e.changedTouches[0].clientX}return t.clientX}getCurrentTransform(){const t=getComputedStyle(this.track).transform;if(t==="none")return 0;const e=t.match(/matrix3d\((.+)\)/);if(e){const s=e[1].split(", ");return parseFloat(s[12])||0}const i=t.match(/matrix\((.+)\)/);if(i){const s=i[1].split(", ");return parseFloat(s[4])||0}return 0}prevSlide(){this.config.infinite?(this.handleInfinitePrev(),this.updateInfiniteDots()):(this.currentIndex=Math.max(0,this.currentIndex-1),this.updateCarousel())}handleInfiniteNext(){const t=this.getCurrentConfig(),e=t.itemsToScroll,i=this.originalItems.length,s=t.itemsToShow;this.currentSlideIndex=(this.currentSlideIndex+e)%i,this.activeStartIndex+=e,this.updateInfinitePosition(),this.updateActiveSlides();const n=this.items.length-s;this.activeStartIndex>=n&&setTimeout(()=>{this.track.style.transition="none",this.activeStartIndex=s+this.currentSlideIndex,this.updateInfinitePosition(),this.updateActiveSlides(),this.track.offsetHeight,requestAnimationFrame(()=>{this.track.style.transition=""})},this.config.speed),this.updateInfiniteDots()}handleInfinitePrev(){const t=this.getCurrentConfig(),e=t.itemsToScroll,i=this.originalItems.length,s=t.itemsToShow;this.currentSlideIndex=(this.currentSlideIndex-e+i)%i,this.activeStartIndex-=e,this.updateInfinitePosition(),this.updateActiveSlides(),this.activeStartIndex<s&&setTimeout(()=>{this.track.style.transition="none",this.activeStartIndex=this.activeStartIndex+i,this.updateInfinitePosition(),this.updateActiveSlides(),this.track.offsetHeight,requestAnimationFrame(()=>{this.track.style.transition=""})},this.config.speed),this.updateInfiniteDots()}updateInfinitePosition(){const t=this.getCurrentConfig(),e=this.parseGap(t.gap),i=-this.activeStartIndex*(this.itemWidth+e);this.track.style.setProperty("--carousel-speed",`${this.config.speed}ms`),this.track.style.transform=`translate3d(${i}px, 0px, 0px)`}updateActiveSlides(){const e=this.getCurrentConfig().itemsToShow;this.items.forEach(i=>{i.classList.remove("carousel-active","carousel-current"),i.setAttribute("aria-hidden","true"),i.setAttribute("tabindex","-1")});for(let i=0;i<e;i++){const s=this.activeStartIndex+i;if(s>=0&&s<this.items.length){const o=this.items[s];o.classList.add("carousel-active"),o.setAttribute("aria-hidden","false"),o.setAttribute("tabindex","-1"),i===Math.floor(e/2)&&o.classList.add("carousel-current")}}}updateInfiniteDots(){if(!this.dotsContainer)return;this.dotsContainer.querySelectorAll(".carousel-dot").forEach((e,i)=>{const s=i===this.currentSlideIndex;e.classList.toggle("active",s),e.setAttribute("aria-selected",s.toString()),e.setAttribute("tabindex",s?"0":"-1")})}nextSlide(){this.config.infinite?(this.handleInfiniteNext(),this.updateInfiniteDots()):(this.currentIndex=Math.min(this.totalSlides-1,this.currentIndex+1),this.updateCarousel())}goToInfiniteSlide(t){const i=this.getCurrentConfig().itemsToShow;this.currentSlideIndex=t,this.activeStartIndex=i+t,this.updateInfinitePosition(),this.updateActiveSlides(),this.updateInfiniteDots()}goToSlide(t){this.config.infinite?this.goToInfiniteSlide(t):(this.currentIndex=Math.max(0,Math.min(this.totalSlides-1,t)),this.updateCarousel())}setupInfinite(){const t=this.getCurrentConfig(),e=t.itemsToShow,i=this.originalItems.length;this.track.innerHTML="";for(let n=0;n<e;n++){const r=i-e+n,a=this.originalItems[r].cloneNode(!0);a.classList.add("carousel-slide","carousel-cloned"),a.setAttribute("data-index",(-(e-n)).toString()),a.setAttribute("tabindex","-1"),a.setAttribute("aria-hidden","true"),a.style.width=`${this.itemWidth}px`,a.style.flexShrink="0",this.track.appendChild(a)}this.originalItems.forEach((n,r)=>{const a=n.cloneNode(!0);a.classList.add("carousel-slide"),a.setAttribute("data-index",r.toString()),a.setAttribute("tabindex","-1"),a.style.width=`${this.itemWidth}px`,a.style.flexShrink="0",this.track.appendChild(a)});for(let n=0;n<e;n++){const r=this.originalItems[n].cloneNode(!0);r.classList.add("carousel-slide","carousel-cloned"),r.setAttribute("data-index",(i+n).toString()),r.setAttribute("tabindex","-1"),r.setAttribute("aria-hidden","true"),r.style.width=`${this.itemWidth}px`,r.style.flexShrink="0",this.track.appendChild(r)}this.items=Array.from(this.track.children);const s=this.parseGap(t.gap),o=this.items.length*this.itemWidth+(this.items.length-1)*s;this.track.style.width=o+"px",this.currentSlideIndex=0,this.activeStartIndex=e,this.updateInfinitePosition(),this.updateActiveSlides(),this.isInfinite=!0}calculateSlidePositions(){if(this.config.infinite){this.slidePositions=[];for(let r=0;r<this.originalItems.length;r++)this.slidePositions.push(r);return}const t=this.getCurrentConfig(),e=this.items.length,i=t.itemsToShow,s=t.itemsToScroll;this.slidePositions=[];let o=0;const n=Math.max(0,e-i);for(;o<=n&&(this.slidePositions.push(o),!(o>=n));){const r=o+s;r>n&&o<n?o=n:o=r}}getCurrentFirstVisibleItemIndex(){if(this.config.infinite)return this.currentIndex;if(this.slidePositions&&this.slidePositions[this.currentIndex]!==void 0)return this.slidePositions[this.currentIndex];const t=this.getCurrentConfig();return Math.min(this.currentIndex*t.itemsToScroll,Math.max(0,this.items.length-t.itemsToShow))}updateCarouselTransform(){const t=this.getCurrentConfig(),e=this.parseGap(t.gap),s=-this.getCurrentFirstVisibleItemIndex()*(this.itemWidth+e);this.track.style.setProperty("--carousel-speed",`${this.config.speed}ms`),this.track.style.transform=`translateX(${s}px)`}announceSlideChange(){const t=this.config.infinite?this.currentSlideIndex+1:this.currentIndex+1,e=this.config.infinite?this.originalItems.length:this.totalSlides,i=`Slide ${t} of ${e}`;let s=this.carousel.querySelector(".carousel-live-region");s||(s=document.createElement("div"),s.className="carousel-live-region",s.setAttribute("aria-live","polite"),s.setAttribute("aria-atomic","true"),s.style.cssText="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;",this.carousel.appendChild(s)),s.textContent=i}announceAutoplayState(t){let e=this.carousel.querySelector(".carousel-autoplay-region");e||(e=document.createElement("div"),e.className="carousel-autoplay-region",e.setAttribute("aria-live","polite"),e.setAttribute("aria-atomic","true"),e.style.cssText="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;",this.carousel.appendChild(e)),e.textContent=`Carousel autoplay ${t}`}updateCarousel(){this.config.infinite?(this.updateDots(),this.updateInfiniteScrollbar(),this.updateArrows()):(this.updateCarouselTransform(),this.updateDots(),this.updateScrollbar(),this.updateArrows(),this.updateActiveSlideStates()),this.config.adaptiveHeight&&this.updateHeight(),this.carousel.dispatchEvent(new CustomEvent("carousel:slide",{detail:{currentIndex:this.currentIndex,totalSlides:this.config.infinite?this.items.length:this.totalSlides,realIndex:this.currentIndex}}))}updateArrows(){const t=this.getCurrentConfig();(this.originalItems?this.originalItems.length:this.items.length)<=t.itemsToShow?(this.prevButton&&(this.prevButton.style.display="none"),this.nextButton&&(this.nextButton.style.display="none")):(this.prevButton&&(this.prevButton.style.display=""),this.nextButton&&(this.nextButton.style.display=""),this.config.infinite?(this.prevButton&&(this.prevButton.disabled=!1),this.nextButton&&(this.nextButton.disabled=!1)):(this.prevButton&&(this.prevButton.disabled=this.currentIndex===0),this.nextButton&&(this.nextButton.disabled=this.currentIndex>=this.totalSlides-1)))}startAutoplay(){this.config.autoplay&&(this.stopAutoplay(),this.autoplayInterval=setInterval(()=>{this.nextSlide()},this.config.autoplaySpeed))}stopAutoplay(){this.autoplayInterval!==null&&(clearInterval(this.autoplayInterval),this.autoplayInterval=null)}handleArrowClick(t){const e=Date.now(),i=e-this.lastArrowClickTime,s=this.config.speed+50;this.isTransitioning||i<s||(this.lastArrowClickTime=e,this.isTransitioning=!0,t(),this.announceSlideChange(),setTimeout(()=>{this.isTransitioning=!1},this.config.speed))}destroy(){this.stopAutoplay()}}document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll(".carousel").forEach(t=>new S(t))});window.initCarousel=f=>new S(f);
+class S {
+  carousel;
+  track;
+  originalItems;
+  items;
+  prevButton;
+  nextButton;
+  dotsContainer;
+  scrollbarThumb;
+  config;
+  currentIndex;
+  totalSlides;
+  autoplayInterval;
+  isDragging;
+  startX;
+  currentX;
+  initialTransform;
+  itemWidth;
+  slidePositions;
+  isInfinite;
+  currentSlideIndex;
+  activeStartIndex;
+  isTransitioning;
+  hasDragged;
+  lastArrowClickTime;
+  constructor(t) {
+    (this.carousel = t),
+      (this.track = t.querySelector('[data-carousel-track]')),
+      (this.originalItems = Array.from(this.track.children)),
+      (this.items = [...this.originalItems]),
+      (this.prevButton = t.querySelector('[data-carousel-prev]')),
+      (this.nextButton = t.querySelector('[data-carousel-next]')),
+      (this.dotsContainer = t.querySelector('[data-carousel-dots]')),
+      (this.scrollbarThumb = t.querySelector('[data-carousel-scrollbar-thumb]')),
+      (this.config = this.getConfig()),
+      (this.currentIndex = 0),
+      (this.totalSlides = 0),
+      (this.autoplayInterval = null),
+      (this.isDragging = !1),
+      (this.startX = 0),
+      (this.currentX = 0),
+      (this.initialTransform = 0),
+      (this.itemWidth = 0),
+      (this.slidePositions = []),
+      (this.isInfinite = !1),
+      (this.currentSlideIndex = 0),
+      (this.activeStartIndex = 0),
+      (this.isTransitioning = !1),
+      (this.hasDragged = !1),
+      (this.lastArrowClickTime = 0),
+      this.init();
+  }
+  getConfig() {
+    const t = this.carousel.dataset,
+      e = JSON.parse(t.responsive || '[]');
+    return {
+      itemsToShow: parseInt(t.itemsToShow || '1') || 1,
+      itemsToScroll: parseInt(t.itemsToScroll || '1') || 1,
+      infinite: t.infinite === 'true',
+      autoplay: t.autoplay === 'true',
+      autoplaySpeed: parseInt(t.autoplaySpeed || '3000') || 3e3,
+      speed: parseInt(t.speed || '300') || 300,
+      adaptiveHeight: t.adaptiveHeight === 'true',
+      draggable: t.draggable === 'true',
+      swipeable: t.swipeable === 'true',
+      pauseOnHover: t.pauseOnHover === 'true',
+      responsive: e,
+      gap: t.gap || '1rem',
+    };
+  }
+  init() {
+    this.calculateDimensions(),
+      this.config.infinite && this.setupInfinite(),
+      this.setupResponsive(),
+      this.createDots(),
+      this.setupEventListeners(),
+      this.updateCarousel(),
+      this.config.autoplay && this.startAutoplay(),
+      this.config.adaptiveHeight && this.updateHeight();
+  }
+  calculateDimensions() {
+    const t = this.carousel.querySelector('.carousel-container').offsetWidth,
+      e = this.getCurrentConfig(),
+      i = this.parseGap(e.gap),
+      s = (e.itemsToShow - 1) * i;
+    if (
+      ((this.itemWidth = (t - s) / e.itemsToShow),
+      this.carousel.querySelectorAll('.carousel-item').forEach((n) => {
+        (n.style.width = `${this.itemWidth}px`), (n.style.flexShrink = '0');
+      }),
+      this.carousel.offsetHeight,
+      this.config.infinite)
+    )
+      this.calculateSlidePositions(), (this.totalSlides = this.originalItems.length);
+    else {
+      const n = e.itemsToShow;
+      this.items.length <= n
+        ? (this.totalSlides = 1)
+        : (this.calculateSlidePositions(), (this.totalSlides = this.slidePositions.length));
+    }
+    if (this.config.infinite) {
+      const n = this.items.length;
+      this.track.style.width = `${n * this.itemWidth + (n - 1) * i}px`;
+    }
+    this.updatePosition();
+  }
+  refreshAllItems() {
+    this.carousel.querySelectorAll('.carousel-item').forEach((e) => {
+      (e.style.width = `${this.itemWidth}px`), (e.style.flexShrink = '0');
+    });
+  }
+  updatePosition() {
+    this.config.infinite ? this.updateInfinitePosition() : this.updateCarouselTransform();
+  }
+  parseGap(t) {
+    return t.includes('rem') || t.includes('em')
+      ? parseFloat(t) * 16
+      : t.includes('px')
+        ? parseFloat(t)
+        : parseFloat(t) || 0;
+  }
+  getCurrentConfig() {
+    const t = window.innerWidth,
+      e = { ...this.config };
+    for (const i of this.config.responsive)
+      if (t <= i.breakpoint) {
+        (e.itemsToShow = i.itemsToShow), (e.itemsToScroll = i.itemsToScroll || e.itemsToScroll);
+        break;
+      }
+    return (
+      this.config.itemsToShow >= 2 &&
+        this.config.responsive.length === 0 &&
+        (t <= 768
+          ? ((e.itemsToShow = 1), (e.itemsToScroll = 1))
+          : t <= 992 &&
+            this.config.itemsToShow > 2 &&
+            ((e.itemsToShow = 2), (e.itemsToScroll = Math.min(2, this.config.itemsToScroll)))),
+      e
+    );
+  }
+  setupResponsive() {
+    new ResizeObserver((e) => {
+      for (const i of e)
+        if (i.target === this.carousel) {
+          const s = this.config.infinite ? this.currentSlideIndex : this.currentIndex,
+            o = this.getCurrentConfig();
+          if ((this.calculateDimensions(), this.config.infinite)) {
+            const n = this.getCurrentConfig();
+            if (o.itemsToShow !== n.itemsToShow) this.setupInfinite();
+            else {
+              this.refreshAllItems();
+              const r = this.parseGap(n.gap),
+                a = -this.activeStartIndex * (this.itemWidth + r);
+              requestAnimationFrame(() => {
+                this.track.style.transform = `translate3d(${a}px, 0px, 0px)`;
+              });
+            }
+          } else
+            this.refreshAllItems(),
+              this.slidePositions &&
+                this.slidePositions.length > 0 &&
+                (this.currentIndex = Math.min(s, this.slidePositions.length - 1)),
+              requestAnimationFrame(() => {
+                this.updatePosition();
+              });
+          this.updateCarousel(),
+            this.createDots(),
+            this.config.adaptiveHeight && this.updateHeight();
+        }
+    }).observe(this.carousel);
+  }
+  createDots() {
+    if (!this.dotsContainer) return;
+    this.dotsContainer.innerHTML = '';
+    const t = this.getCurrentConfig(),
+      e = this.originalItems ? this.originalItems.length : this.items.length,
+      i = t.itemsToShow;
+    if (e <= i) {
+      this.dotsContainer.style.display = 'none';
+      return;
+    } else this.dotsContainer.style.display = '';
+    const s = this.config.infinite ? this.originalItems.length : this.totalSlides;
+    for (let o = 0; o < s; o++) {
+      const n = document.createElement('button');
+      (n.className = 'carousel-dot'),
+        n.setAttribute('aria-label', `Go to slide ${o + 1} of ${s}`),
+        n.setAttribute('role', 'tab'),
+        n.setAttribute('type', 'button'),
+        n.setAttribute('aria-controls', `${this.carousel.dataset.carouselId}-track`),
+        n.setAttribute('aria-selected', 'false'),
+        n.setAttribute('tabindex', '-1'),
+        this.config.infinite
+          ? n.addEventListener('click', () => this.goToInfiniteSlide(o))
+          : n.addEventListener('click', () => this.goToSlide(o)),
+        this.dotsContainer.appendChild(n);
+    }
+    this.updateDots();
+  }
+  updateDots() {
+    if (!this.dotsContainer) return;
+    this.dotsContainer.querySelectorAll('.carousel-dot').forEach((e, i) => {
+      const s = i === this.currentIndex;
+      e.classList.toggle('active', s),
+        e.setAttribute('aria-selected', s.toString()),
+        e.setAttribute('tabindex', s ? '0' : '-1');
+    });
+  }
+  updateInfiniteScrollbar() {
+    if (!this.scrollbarThumb) return;
+    const t = this.getCurrentConfig(),
+      e = this.originalItems.length,
+      i = t.itemsToShow,
+      s = this.carousel.querySelector('.carousel-scrollbar');
+    if (s)
+      if (e <= i) {
+        s.style.display = 'none';
+        return;
+      } else s.style.display = '';
+    const o = (i / e) * 100,
+      n = Math.max(8, Math.min(o, 95)),
+      r = this.currentSlideIndex / Math.max(1, e - 1),
+      a = 100 - n,
+      l = r * a;
+    (this.scrollbarThumb.style.width = `${n}%`),
+      (this.scrollbarThumb.style.left = `${l}%`),
+      (this.scrollbarThumb.style.transform = 'none');
+  }
+  updateScrollbar() {
+    if (!this.scrollbarThumb) return;
+    const t = this.getCurrentConfig(),
+      e = this.items.length,
+      i = t.itemsToShow,
+      s = this.carousel.querySelector('.carousel-scrollbar');
+    if (s)
+      if (e <= i) {
+        s.style.display = 'none';
+        return;
+      } else s.style.display = '';
+    const o = (i / e) * 100,
+      n = Math.max(8, Math.min(o, 95)),
+      r = this.getCurrentScrollProgress(),
+      a = 100 - n,
+      l = r * a;
+    (this.scrollbarThumb.style.width = `${n}%`),
+      (this.scrollbarThumb.style.left = `${l}%`),
+      (this.scrollbarThumb.style.transform = 'none');
+  }
+  getCurrentScrollProgress() {
+    if (!this.config.infinite && this.slidePositions && this.slidePositions.length > 0) {
+      const a = this.slidePositions.length - 1;
+      return a === 0 ? 0 : this.currentIndex / a;
+    }
+    const t = this.getCurrentTransform(),
+      e = this.getCurrentConfig(),
+      i = this.items.length,
+      s = e.itemsToShow,
+      o = this.parseGap(e.gap),
+      n = Math.max(0, (i - s) * (this.itemWidth + o));
+    if (n === 0) return 0;
+    const r = Math.abs(t);
+    return Math.min(r / n, 1);
+  }
+  setFluidPosition(t) {
+    if (!this.slidePositions || this.slidePositions.length === 0) {
+      this.setDirectPosition(t);
+      return;
+    }
+    const e = t * (this.slidePositions.length - 1),
+      i = Math.floor(e),
+      s = Math.min(Math.ceil(e), this.slidePositions.length - 1),
+      o = e - i,
+      n = this.getCurrentConfig(),
+      r = this.parseGap(n.gap),
+      a = this.itemWidth + r,
+      l = this.slidePositions[i],
+      h = this.slidePositions[s],
+      u = -(l + (h - l) * o) * a;
+    (this.track.style.transition = 'none'),
+      (this.track.style.transform = `translateX(${u}px)`),
+      this.updateScrollbarThumbPosition(t),
+      this.updateActiveSlideStates();
+    const d = Math.round(e);
+    (this.currentIndex = Math.max(0, Math.min(this.slidePositions.length - 1, d))),
+      this.updateDots(),
+      this.updateArrows(),
+      requestAnimationFrame(() => {
+        this.track.style.transition = '';
+      });
+  }
+  setDirectPosition(t) {
+    const e = this.getCurrentConfig(),
+      i = this.items.length,
+      s = e.itemsToShow,
+      o = this.parseGap(e.gap),
+      n = (i - s) * (this.itemWidth + o),
+      r = -t * n;
+    (this.track.style.transition = 'none'),
+      (this.track.style.transform = `translateX(${r}px)`),
+      this.updateScrollbarThumbPosition(t),
+      this.updateActiveSlideStates(),
+      requestAnimationFrame(() => {
+        this.track.style.transition = '';
+      });
+  }
+  updateScrollbarThumbPosition(t) {
+    if (!this.scrollbarThumb) return;
+    const e = this.getCurrentConfig(),
+      i = this.items.length,
+      o = (e.itemsToShow / i) * 100,
+      r = 100 - Math.max(8, Math.min(o, 95)),
+      a = t * r;
+    this.scrollbarThumb.style.left = `${a}%`;
+  }
+  updateActiveSlideStates() {
+    const t = this.getCurrentConfig(),
+      e = t.itemsToShow,
+      i = this.getCurrentTransform(),
+      s = this.parseGap(t.gap),
+      o = this.itemWidth + s,
+      n = Math.floor(Math.abs(i) / o),
+      r = Math.min(n + e - 1, this.items.length - 1);
+    this.items.forEach((a, l) => {
+      const h = l >= n && l <= r;
+      a.setAttribute('aria-hidden', (!h).toString()), a.classList.toggle('carousel-active', h);
+    });
+  }
+  updateHeight() {
+    if (!this.config.adaptiveHeight) return;
+    const t = this.getCurrentConfig(),
+      e = this.getCurrentFirstVisibleItemIndex(),
+      i = Math.min(e + t.itemsToShow - 1, this.items.length - 1),
+      s = this.items.slice(e, i + 1);
+    let o = 0;
+    s.forEach((n) => {
+      const r = n.offsetHeight;
+      r > o && (o = r);
+    }),
+      (this.carousel.querySelector('.carousel-container').style.height = `${o}px`);
+  }
+  setupEventListeners() {
+    this.prevButton &&
+      this.prevButton.addEventListener('click', () => {
+        this.handleArrowClick(() => this.prevSlide());
+      }),
+      this.nextButton &&
+        this.nextButton.addEventListener('click', () => {
+          this.handleArrowClick(() => this.nextSlide());
+        }),
+      this.carousel.addEventListener('keydown', (t) => {
+        if (t.key === 'ArrowLeft') t.preventDefault(), this.prevSlide(), this.announceSlideChange();
+        else if (t.key === 'ArrowRight')
+          t.preventDefault(), this.nextSlide(), this.announceSlideChange();
+        else if (t.key === 'Home')
+          t.preventDefault(), this.goToSlide(0), this.announceSlideChange();
+        else if (t.key === 'End') {
+          t.preventDefault();
+          const e = this.config.infinite ? this.originalItems.length - 1 : this.totalSlides - 1;
+          this.goToSlide(e), this.announceSlideChange();
+        }
+      }),
+      (this.config.draggable || this.config.swipeable) && this.setupDragEvents(),
+      this.track.addEventListener(
+        'click',
+        (t) => {
+          if (this.hasDragged) return t.preventDefault(), t.stopPropagation(), !1;
+        },
+        !0
+      ),
+      this.config.autoplay &&
+        this.config.pauseOnHover &&
+        (this.carousel.addEventListener('mouseenter', () => {
+          this.stopAutoplay(), this.announceAutoplayState('paused');
+        }),
+        this.carousel.addEventListener('mouseleave', () => {
+          this.startAutoplay(), this.announceAutoplayState('playing');
+        })),
+      this.scrollbarThumb && this.setupScrollbarDrag();
+  }
+  setupScrollbarDrag() {
+    const t = this.carousel.querySelector('.carousel-scrollbar-track');
+    if (!t) return;
+    let e = !1,
+      i = 0,
+      s = 0;
+    const o = (a) => {
+        a.preventDefault(), (e = !0);
+        const l = t.getBoundingClientRect();
+        (s = this.getEventX(a)),
+          a.target === this.scrollbarThumb
+            ? (i = this.scrollbarThumb.getBoundingClientRect().left - l.left)
+            : (this.updateScrollbarFromPosition(a),
+              (i = this.scrollbarThumb.getBoundingClientRect().left - l.left)),
+          (document.body.style.userSelect = 'none'),
+          (this.scrollbarThumb.style.cursor = 'grabbing');
+      },
+      n = (a) => {
+        if (!e || (a.preventDefault(), this.config.infinite)) return;
+        const l = t.getBoundingClientRect(),
+          h = this.getEventX(a) - s,
+          c = i + h,
+          u = this.getCurrentConfig(),
+          d = this.items.length,
+          g = (u.itemsToShow / d) * 100,
+          b = Math.max(8, Math.min(g, 95)),
+          m = (l.width * (100 - b)) / 100,
+          v = Math.max(0, Math.min(m, c)),
+          I = m > 0 ? v / m : 0;
+        this.setFluidPosition(I);
+      },
+      r = () => {
+        e &&
+          ((e = !1),
+          (document.body.style.userSelect = ''),
+          (this.scrollbarThumb.style.cursor = 'grab'));
+      };
+    t.addEventListener('mousedown', o),
+      this.scrollbarThumb.addEventListener('mousedown', o),
+      document.addEventListener('mousemove', n),
+      document.addEventListener('mouseup', r),
+      t.addEventListener('touchstart', o, { passive: !1 }),
+      this.scrollbarThumb.addEventListener('touchstart', o, { passive: !1 }),
+      document.addEventListener('touchmove', n, { passive: !1 }),
+      document.addEventListener('touchend', r, { passive: !0 }),
+      t.addEventListener('selectstart', (a) => a.preventDefault()),
+      this.scrollbarThumb.addEventListener('selectstart', (a) => a.preventDefault());
+  }
+  updateScrollbarFromPosition(t) {
+    const i = this.carousel.querySelector('.carousel-scrollbar-track').getBoundingClientRect(),
+      s = this.getEventX(t) - i.left;
+    if (this.config.infinite) return;
+    const o = this.getCurrentConfig(),
+      n = this.items.length,
+      a = (o.itemsToShow / n) * 100,
+      l = Math.max(8, Math.min(a, 95)),
+      h = i.width,
+      c = (h * (100 - l)) / 100,
+      u = (h * l) / 100,
+      d = s - u / 2,
+      p = Math.max(0, Math.min(c, d)),
+      g = c > 0 ? p / c : 0;
+    this.setFluidPosition(g);
+  }
+  setupDragEvents() {
+    this.config.draggable &&
+      (this.track.addEventListener('mousedown', (t) => this.dragStart(t)),
+      document.addEventListener('mousemove', (t) => this.dragMove(t)),
+      document.addEventListener('mouseup', (t) => this.dragEnd(t)),
+      this.track.addEventListener('dragstart', (t) => t.preventDefault()),
+      this.track.addEventListener('selectstart', (t) => t.preventDefault()),
+      this.track.addEventListener('contextmenu', (t) => {
+        this.isDragging && t.preventDefault();
+      })),
+      this.config.swipeable &&
+        (this.track.addEventListener('touchstart', (t) => this.dragStart(t), { passive: !1 }),
+        document.addEventListener('touchmove', (t) => this.dragMove(t), { passive: !1 }),
+        document.addEventListener('touchend', (t) => this.dragEnd(t), { passive: !0 }));
+  }
+  dragStart(t) {
+    if (t.target.matches('button, input, select, textarea, a')) return;
+    t.preventDefault(),
+      (this.isDragging = !0),
+      (this.hasDragged = !1),
+      this.track.classList.add('dragging'),
+      (this.startX = this.getEventX(t)),
+      this.track.querySelector('a') !== null && (this.currentX = this.startX),
+      (this.initialTransform = this.getCurrentTransform()),
+      (document.body.style.userSelect = 'none'),
+      this.config.autoplay && this.stopAutoplay();
+  }
+  dragMove(t) {
+    if (!this.isDragging) return;
+    t.preventDefault(), (this.currentX = this.getEventX(t));
+    const e = this.currentX - this.startX;
+    Math.abs(e) > 5 && (this.hasDragged = !0);
+    let i = e;
+    const s = this.getCurrentConfig();
+    if (!this.config.infinite) {
+      const n = -(this.items.length - s.itemsToShow) * (this.itemWidth + this.parseGap(s.gap));
+      if (this.initialTransform + e > 0) i = e * 0.3;
+      else if (this.initialTransform + e < n) {
+        const r = this.initialTransform + e - n;
+        i = e - r * 0.7;
+      }
+    }
+    const o = this.initialTransform + i;
+    this.config.infinite
+      ? (this.track.style.transform = `translate3d(${o}px, 0px, 0px)`)
+      : (this.track.style.transform = `translateX(${o}px)`);
+  }
+  dragEnd(t) {
+    if (!this.isDragging) return;
+    (this.isDragging = !1),
+      this.track.classList.remove('dragging'),
+      (document.body.style.userSelect = '');
+    const e = this.currentX - this.startX;
+    Math.abs(e) > 50
+      ? e > 0
+        ? this.prevSlide()
+        : this.nextSlide()
+      : this.config.infinite
+        ? this.updateInfinitePosition()
+        : this.updateCarousel(),
+      setTimeout(() => {
+        this.hasDragged = !1;
+      }, 10),
+      this.config.autoplay && this.config.pauseOnHover && this.startAutoplay();
+  }
+  getEventX(t) {
+    if (t.type.includes('touch')) {
+      const e = t;
+      return e.touches && e.touches[0] ? e.touches[0].clientX : e.changedTouches[0].clientX;
+    }
+    return t.clientX;
+  }
+  getCurrentTransform() {
+    const t = getComputedStyle(this.track).transform;
+    if (t === 'none') return 0;
+    const e = t.match(/matrix3d\((.+)\)/);
+    if (e) {
+      const s = e[1].split(', ');
+      return parseFloat(s[12]) || 0;
+    }
+    const i = t.match(/matrix\((.+)\)/);
+    if (i) {
+      const s = i[1].split(', ');
+      return parseFloat(s[4]) || 0;
+    }
+    return 0;
+  }
+  prevSlide() {
+    this.config.infinite
+      ? (this.handleInfinitePrev(), this.updateInfiniteDots())
+      : ((this.currentIndex = Math.max(0, this.currentIndex - 1)), this.updateCarousel());
+  }
+  handleInfiniteNext() {
+    const t = this.getCurrentConfig(),
+      e = t.itemsToScroll,
+      i = this.originalItems.length,
+      s = t.itemsToShow;
+    (this.currentSlideIndex = (this.currentSlideIndex + e) % i),
+      (this.activeStartIndex += e),
+      this.updateInfinitePosition(),
+      this.updateActiveSlides();
+    const n = this.items.length - s;
+    this.activeStartIndex >= n &&
+      setTimeout(() => {
+        (this.track.style.transition = 'none'),
+          (this.activeStartIndex = s + this.currentSlideIndex),
+          this.updateInfinitePosition(),
+          this.updateActiveSlides(),
+          this.track.offsetHeight,
+          requestAnimationFrame(() => {
+            this.track.style.transition = '';
+          });
+      }, this.config.speed),
+      this.updateInfiniteDots();
+  }
+  handleInfinitePrev() {
+    const t = this.getCurrentConfig(),
+      e = t.itemsToScroll,
+      i = this.originalItems.length,
+      s = t.itemsToShow;
+    (this.currentSlideIndex = (this.currentSlideIndex - e + i) % i),
+      (this.activeStartIndex -= e),
+      this.updateInfinitePosition(),
+      this.updateActiveSlides(),
+      this.activeStartIndex < s &&
+        setTimeout(() => {
+          (this.track.style.transition = 'none'),
+            (this.activeStartIndex = this.activeStartIndex + i),
+            this.updateInfinitePosition(),
+            this.updateActiveSlides(),
+            this.track.offsetHeight,
+            requestAnimationFrame(() => {
+              this.track.style.transition = '';
+            });
+        }, this.config.speed),
+      this.updateInfiniteDots();
+  }
+  updateInfinitePosition() {
+    const t = this.getCurrentConfig(),
+      e = this.parseGap(t.gap),
+      i = -this.activeStartIndex * (this.itemWidth + e);
+    this.track.style.setProperty('--carousel-speed', `${this.config.speed}ms`),
+      (this.track.style.transform = `translate3d(${i}px, 0px, 0px)`);
+  }
+  updateActiveSlides() {
+    const e = this.getCurrentConfig().itemsToShow;
+    this.items.forEach((i) => {
+      i.classList.remove('carousel-active', 'carousel-current'),
+        i.setAttribute('aria-hidden', 'true'),
+        i.setAttribute('tabindex', '-1');
+    });
+    for (let i = 0; i < e; i++) {
+      const s = this.activeStartIndex + i;
+      if (s >= 0 && s < this.items.length) {
+        const o = this.items[s];
+        o.classList.add('carousel-active'),
+          o.setAttribute('aria-hidden', 'false'),
+          o.setAttribute('tabindex', '-1'),
+          i === Math.floor(e / 2) && o.classList.add('carousel-current');
+      }
+    }
+  }
+  updateInfiniteDots() {
+    if (!this.dotsContainer) return;
+    this.dotsContainer.querySelectorAll('.carousel-dot').forEach((e, i) => {
+      const s = i === this.currentSlideIndex;
+      e.classList.toggle('active', s),
+        e.setAttribute('aria-selected', s.toString()),
+        e.setAttribute('tabindex', s ? '0' : '-1');
+    });
+  }
+  nextSlide() {
+    this.config.infinite
+      ? (this.handleInfiniteNext(), this.updateInfiniteDots())
+      : ((this.currentIndex = Math.min(this.totalSlides - 1, this.currentIndex + 1)),
+        this.updateCarousel());
+  }
+  goToInfiniteSlide(t) {
+    const i = this.getCurrentConfig().itemsToShow;
+    (this.currentSlideIndex = t),
+      (this.activeStartIndex = i + t),
+      this.updateInfinitePosition(),
+      this.updateActiveSlides(),
+      this.updateInfiniteDots();
+  }
+  goToSlide(t) {
+    this.config.infinite
+      ? this.goToInfiniteSlide(t)
+      : ((this.currentIndex = Math.max(0, Math.min(this.totalSlides - 1, t))),
+        this.updateCarousel());
+  }
+  setupInfinite() {
+    const t = this.getCurrentConfig(),
+      e = t.itemsToShow,
+      i = this.originalItems.length;
+    this.track.innerHTML = '';
+    for (let n = 0; n < e; n++) {
+      const r = i - e + n,
+        a = this.originalItems[r].cloneNode(!0);
+      a.classList.add('carousel-slide', 'carousel-cloned'),
+        a.setAttribute('data-index', (-(e - n)).toString()),
+        a.setAttribute('tabindex', '-1'),
+        a.setAttribute('aria-hidden', 'true'),
+        (a.style.width = `${this.itemWidth}px`),
+        (a.style.flexShrink = '0'),
+        this.track.appendChild(a);
+    }
+    this.originalItems.forEach((n, r) => {
+      const a = n.cloneNode(!0);
+      a.classList.add('carousel-slide'),
+        a.setAttribute('data-index', r.toString()),
+        a.setAttribute('tabindex', '-1'),
+        (a.style.width = `${this.itemWidth}px`),
+        (a.style.flexShrink = '0'),
+        this.track.appendChild(a);
+    });
+    for (let n = 0; n < e; n++) {
+      const r = this.originalItems[n].cloneNode(!0);
+      r.classList.add('carousel-slide', 'carousel-cloned'),
+        r.setAttribute('data-index', (i + n).toString()),
+        r.setAttribute('tabindex', '-1'),
+        r.setAttribute('aria-hidden', 'true'),
+        (r.style.width = `${this.itemWidth}px`),
+        (r.style.flexShrink = '0'),
+        this.track.appendChild(r);
+    }
+    this.items = Array.from(this.track.children);
+    const s = this.parseGap(t.gap),
+      o = this.items.length * this.itemWidth + (this.items.length - 1) * s;
+    (this.track.style.width = o + 'px'),
+      (this.currentSlideIndex = 0),
+      (this.activeStartIndex = e),
+      this.updateInfinitePosition(),
+      this.updateActiveSlides(),
+      (this.isInfinite = !0);
+  }
+  calculateSlidePositions() {
+    if (this.config.infinite) {
+      this.slidePositions = [];
+      for (let r = 0; r < this.originalItems.length; r++) this.slidePositions.push(r);
+      return;
+    }
+    const t = this.getCurrentConfig(),
+      e = this.items.length,
+      i = t.itemsToShow,
+      s = t.itemsToScroll;
+    this.slidePositions = [];
+    let o = 0;
+    const n = Math.max(0, e - i);
+    for (; o <= n && (this.slidePositions.push(o), !(o >= n)); ) {
+      const r = o + s;
+      r > n && o < n ? (o = n) : (o = r);
+    }
+  }
+  getCurrentFirstVisibleItemIndex() {
+    if (this.config.infinite) return this.currentIndex;
+    if (this.slidePositions && this.slidePositions[this.currentIndex] !== void 0)
+      return this.slidePositions[this.currentIndex];
+    const t = this.getCurrentConfig();
+    return Math.min(
+      this.currentIndex * t.itemsToScroll,
+      Math.max(0, this.items.length - t.itemsToShow)
+    );
+  }
+  updateCarouselTransform() {
+    const t = this.getCurrentConfig(),
+      e = this.parseGap(t.gap),
+      s = -this.getCurrentFirstVisibleItemIndex() * (this.itemWidth + e);
+    this.track.style.setProperty('--carousel-speed', `${this.config.speed}ms`),
+      (this.track.style.transform = `translateX(${s}px)`);
+  }
+  announceSlideChange() {
+    const t = this.config.infinite ? this.currentSlideIndex + 1 : this.currentIndex + 1,
+      e = this.config.infinite ? this.originalItems.length : this.totalSlides,
+      i = `Slide ${t} of ${e}`;
+    let s = this.carousel.querySelector('.carousel-live-region');
+    s ||
+      ((s = document.createElement('div')),
+      (s.className = 'carousel-live-region'),
+      s.setAttribute('aria-live', 'polite'),
+      s.setAttribute('aria-atomic', 'true'),
+      (s.style.cssText =
+        'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;'),
+      this.carousel.appendChild(s)),
+      (s.textContent = i);
+  }
+  announceAutoplayState(t) {
+    let e = this.carousel.querySelector('.carousel-autoplay-region');
+    e ||
+      ((e = document.createElement('div')),
+      (e.className = 'carousel-autoplay-region'),
+      e.setAttribute('aria-live', 'polite'),
+      e.setAttribute('aria-atomic', 'true'),
+      (e.style.cssText =
+        'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;'),
+      this.carousel.appendChild(e)),
+      (e.textContent = `Carousel autoplay ${t}`);
+  }
+  updateCarousel() {
+    this.config.infinite
+      ? (this.updateDots(), this.updateInfiniteScrollbar(), this.updateArrows())
+      : (this.updateCarouselTransform(),
+        this.updateDots(),
+        this.updateScrollbar(),
+        this.updateArrows(),
+        this.updateActiveSlideStates()),
+      this.config.adaptiveHeight && this.updateHeight(),
+      this.carousel.dispatchEvent(
+        new CustomEvent('carousel:slide', {
+          detail: {
+            currentIndex: this.currentIndex,
+            totalSlides: this.config.infinite ? this.items.length : this.totalSlides,
+            realIndex: this.currentIndex,
+          },
+        })
+      );
+  }
+  updateArrows() {
+    const t = this.getCurrentConfig();
+    (this.originalItems ? this.originalItems.length : this.items.length) <= t.itemsToShow
+      ? (this.prevButton && (this.prevButton.style.display = 'none'),
+        this.nextButton && (this.nextButton.style.display = 'none'))
+      : (this.prevButton && (this.prevButton.style.display = ''),
+        this.nextButton && (this.nextButton.style.display = ''),
+        this.config.infinite
+          ? (this.prevButton && (this.prevButton.disabled = !1),
+            this.nextButton && (this.nextButton.disabled = !1))
+          : (this.prevButton && (this.prevButton.disabled = this.currentIndex === 0),
+            this.nextButton &&
+              (this.nextButton.disabled = this.currentIndex >= this.totalSlides - 1)));
+  }
+  startAutoplay() {
+    this.config.autoplay &&
+      (this.stopAutoplay(),
+      (this.autoplayInterval = setInterval(() => {
+        this.nextSlide();
+      }, this.config.autoplaySpeed)));
+  }
+  stopAutoplay() {
+    this.autoplayInterval !== null &&
+      (clearInterval(this.autoplayInterval), (this.autoplayInterval = null));
+  }
+  handleArrowClick(t) {
+    const e = Date.now(),
+      i = e - this.lastArrowClickTime,
+      s = this.config.speed + 50;
+    this.isTransitioning ||
+      i < s ||
+      ((this.lastArrowClickTime = e),
+      (this.isTransitioning = !0),
+      t(),
+      this.announceSlideChange(),
+      setTimeout(() => {
+        this.isTransitioning = !1;
+      }, this.config.speed));
+  }
+  destroy() {
+    this.stopAutoplay();
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.carousel').forEach((t) => new S(t));
+});
+window.initCarousel = (f) => new S(f);

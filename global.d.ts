@@ -2,7 +2,7 @@
 declare namespace NutrientViewer {
   // Main load function
   function load(configuration: Configuration): Promise<Instance>;
-  
+
   // Static unload function for cleanup
   function unload(container: HTMLElement): Promise<void>;
 
@@ -12,32 +12,32 @@ declare namespace NutrientViewer {
     container: string | HTMLElement;
     document?: string | ArrayBuffer | Blob | File;
     baseUrl?: string;
-    
+
     // Authentication
     licenseKey?: string;
-    
+
     // Document Engine integration
     serverUrl?: string;
     documentId?: string;
     jwt?: string;
     authPayload?: { jwt: string };
     instant?: boolean;
-    
+
     // UI Configuration
     toolbarItems?: ToolbarItem[];
     initialViewState?: ViewState;
     disableWebAssemblyStreaming?: boolean;
-    
+
     // Feature toggles
     enableHistory?: boolean;
     enableAnnotations?: boolean;
     enableForms?: boolean;
     enableDocumentEditor?: boolean;
-    
+
     // Styling
     theme?: 'light' | 'dark' | 'auto';
     styleSheets?: string[];
-    
+
     // Event handlers
     onDocumentLoaded?: (document: unknown) => void;
     onDocumentLoadFailed?: (error: Error) => void;
@@ -48,19 +48,19 @@ declare namespace NutrientViewer {
     // Document management
     readonly totalPageCount: number;
     readonly documentId: string | null;
-    
+
     // Lifecycle methods
     unload(): Promise<void>;
     destroy(): void;
-    
+
     // Navigation
     setViewState(viewState: ViewState): Promise<ViewState>;
     getViewState(): ViewState;
-    
+
     // Event handling
     addEventListener(event: string, callback: Function): void;
     removeEventListener(event: string, callback: Function): void;
-    
+
     // Export/Save
     exportPDF(options?: unknown): Promise<ArrayBuffer>;
     save(options?: unknown): Promise<ArrayBuffer>;
