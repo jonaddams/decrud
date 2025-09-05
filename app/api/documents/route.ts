@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { type Prisma, PrismaClient } from '@prisma/client';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 import { documentEngineService } from '@/lib/document-engine';
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     // Build where clause with search and filters
-    const whereClause: any = { ...baseFilter };
+    const whereClause: Prisma.DocumentWhereInput = { ...baseFilter };
 
     // Add search functionality - search across title, filename, and author
     if (search) {

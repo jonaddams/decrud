@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
  * GET /api/documents/[id]
  * Get a specific document's metadata
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await requireAuth();
@@ -134,7 +134,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
  * Delete a document
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
