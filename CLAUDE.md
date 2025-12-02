@@ -1158,7 +1158,7 @@ The Nutrient Viewer CDN version is managed through environment variables for eas
 
 ```bash
 # .env and .env.local
-NUTRIENT_VIEWER_VERSION=1.4.1
+NUTRIENT_VIEWER_VERSION=1.8.0
 ```
 
 This allows updating the Nutrient Viewer library version by simply changing the environment variable rather than searching through code. The version is used in `app/layout.tsx`:

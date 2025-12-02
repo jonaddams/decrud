@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 import { documentEngineService } from '@/lib/document-engine';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 /**
  * GET /api/documents/[id]/viewer-url

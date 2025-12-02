@@ -89,18 +89,28 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
       // Clear the container
       containerRef.current.innerHTML = '';
 
-      const serverUrl =
-        (process.env.NEXT_PUBLIC_DOCUMENT_ENGINE_BASE_URL || 'http://localhost:8585').replace(
-          /\/$/,
-          ''
-        ) + '/';
+      const serverUrl = `${(
+        process.env.NEXT_PUBLIC_DOCUMENT_ENGINE_BASE_URL || 'http://localhost:8585'
+      ).replace(/\/$/, '')}/`;
 
-      const config = {
+      // Create ViewState using Immutable.js Record constructor
+      const initialViewState = new window.NutrientViewer.ViewState({
+        currentPageIndex: 98,
+        zoom: window.NutrientViewer.ZoomMode.FIT_TO_WIDTH,
+        pagesRotation: 0,
+        sidebarMode: window.NutrientViewer.SidebarMode.THUMBNAILS,
+      });
+
+      const config: NutrientViewer.Configuration = {
         serverUrl,
         container: containerRef.current,
         documentId: viewerData.documentEngineId,
         authPayload: { jwt: viewerData.jwt },
         instant: true,
+        initialViewState,
+        officeConversionSettings: {
+          documentMarkupMode: 'allMarkup',
+        },
       };
 
       // Initialize using Instant Mode

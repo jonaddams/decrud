@@ -1,8 +1,17 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import jwt from 'jsonwebtoken';
 
 export interface DocumentEngineUploadResponse {
   documentId: string;
+}
+
+export interface DocumentEngineUrlUploadOptions {
+  url: string;
+  documentId?: string;
+  title?: string;
+  copyAssetToStorageBackend?: boolean;
+  keepCurrentAnnotations?: boolean;
+  overwriteExistingDocument?: boolean;
 }
 
 export interface DocumentEngineError {
@@ -23,9 +32,9 @@ class DocumentEngineService {
   private privateKeyPath: string;
 
   constructor() {
-    this.baseUrl = process.env.DOCUMENT_ENGINE_BASE_URL!;
-    this.apiKey = process.env.DOCUMENT_ENGINE_API_KEY!;
-    this.privateKeyPath = process.env.DOCUMENT_ENGINE_PRIVATE_KEY_PATH!;
+    this.baseUrl = process.env.DOCUMENT_ENGINE_BASE_URL ?? '';
+    this.apiKey = process.env.DOCUMENT_ENGINE_API_KEY ?? '';
+    this.privateKeyPath = process.env.DOCUMENT_ENGINE_PRIVATE_KEY_PATH ?? '';
 
     if (!this.baseUrl || !this.apiKey || !this.privateKeyPath) {
       throw new Error('Missing Document Engine configuration');
@@ -65,6 +74,58 @@ class DocumentEngineService {
       return { documentId };
     } catch (error) {
       console.error('Document Engine upload error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Upload a document from URL to Document Engine
+   */
+  async uploadDocumentFromUrl(
+    options: DocumentEngineUrlUploadOptions
+  ): Promise<DocumentEngineUploadResponse> {
+    try {
+      const payload: Record<string, unknown> = {
+        url: options.url,
+        copy_asset_to_storage_backend: options.copyAssetToStorageBackend ?? false,
+        keep_current_annotations: options.keepCurrentAnnotations ?? true,
+        overwrite_existing_document: options.overwriteExistingDocument ?? true,
+      };
+
+      if (options.documentId) {
+        payload.document_id = options.documentId;
+      }
+
+      if (options.title) {
+        payload.title = options.title;
+      }
+
+      const response = await fetch(`${this.baseUrl}/api/documents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token token=${this.apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Document Engine URL upload failed: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      // Document Engine returns the ID in data.document_id according to API docs
+      const documentId = result.data?.document_id || options.documentId;
+
+      if (!documentId) {
+        throw new Error('Document Engine did not return a document ID');
+      }
+
+      return { documentId };
+    } catch (error) {
+      console.error('Document Engine URL upload error:', error);
       throw this.handleError(error);
     }
   }
@@ -199,7 +260,7 @@ class DocumentEngineService {
     maxRetries: number = 2,
     delayMs: number = 1000
   ): Promise<T> {
-    let lastError: Error;
+    let lastError: Error = new Error('Unknown error');
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -213,7 +274,7 @@ class DocumentEngineService {
       }
     }
 
-    throw lastError!;
+    throw lastError;
   }
 }
 

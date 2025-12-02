@@ -10,8 +10,17 @@ type UploadState = {
   success: boolean;
 };
 
+type UploadMode = 'file' | 'url';
+
+type UrlUploadOptions = {
+  copyAssetToStorageBackend: boolean;
+  keepCurrentAnnotations: boolean;
+  overwriteExistingDocument: boolean;
+};
+
 export function FileUpload() {
   const router = useRouter();
+  const [uploadMode, setUploadMode] = useState<UploadMode>('file');
   const [uploadState, setUploadState] = useState<UploadState>({
     isUploading: false,
     progress: 0,
@@ -22,6 +31,13 @@ export function FileUpload() {
   const [dragOver, setDragOver] = useState(false);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
+  const [documentUrl, setDocumentUrl] = useState('');
+  const [documentId, setDocumentId] = useState('');
+  const [urlOptions, setUrlOptions] = useState<UrlUploadOptions>({
+    copyAssetToStorageBackend: false,
+    keepCurrentAnnotations: true,
+    overwriteExistingDocument: true,
+  });
 
   const resetUploadState = useCallback(() => {
     setUploadState({
@@ -127,11 +143,61 @@ export function FileUpload() {
     [router, title, author]
   );
 
-  const handleUpload = useCallback(() => {
-    if (selectedFile) {
-      uploadFile(selectedFile);
+  const uploadFromUrl = useCallback(async () => {
+    setUploadState((prev) => ({ ...prev, isUploading: true, error: null }));
+
+    try {
+      const response = await fetch('/api/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: documentUrl,
+          title,
+          author,
+          documentId: documentId || undefined,
+          copyAssetToStorageBackend: urlOptions.copyAssetToStorageBackend,
+          keepCurrentAnnotations: urlOptions.keepCurrentAnnotations,
+          overwriteExistingDocument: urlOptions.overwriteExistingDocument,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+
+      setUploadState({
+        isUploading: false,
+        progress: 100,
+        error: null,
+        success: true,
+      });
+
+      // Redirect to document view after successful upload
+      setTimeout(() => {
+        router.push(`/documents/${data.document.id}`);
+      }, 1500);
+    } catch (error) {
+      setUploadState({
+        isUploading: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Upload failed',
+        success: false,
+      });
     }
-  }, [selectedFile, uploadFile]);
+  }, [router, documentUrl, title, author, documentId, urlOptions]);
+
+  const handleUpload = useCallback(() => {
+    if (uploadMode === 'file' && selectedFile) {
+      uploadFile(selectedFile);
+    } else if (uploadMode === 'url' && documentUrl) {
+      uploadFromUrl();
+    }
+  }, [uploadMode, selectedFile, documentUrl, uploadFile, uploadFromUrl]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -144,130 +210,310 @@ export function FileUpload() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-medium text-foreground">Select a document to upload</h2>
+        <h2 className="text-lg font-medium text-foreground">Upload a document</h2>
         <p className="mt-1 text-sm text-muted">
-          Supported formats: PDF, Word documents, images, and other common file types.
+          Upload from your device or provide a URL to a document.
         </p>
       </div>
 
-      {/* File drop zone */}
-      <div
-        role="button"
-        tabIndex={0}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onKeyDown={handleKeyDown}
-        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer ${
-          dragOver
-            ? 'border-primary bg-primary/10'
-            : selectedFile
-              ? 'border-success bg-success/10'
-              : 'border-border hover:border-primary/50'
-        }`}
-      >
-        <div className="text-center">
-          {selectedFile ? (
-            <div className="space-y-2">
-              <svg
-                className="mx-auto h-12 w-12 text-success"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <title>Document selected</title>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div className="text-sm text-foreground">
-                <p className="font-medium">{selectedFile.name}</p>
-                <p className="text-muted">{formatFileSize(selectedFile.size)}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedFile(null);
-                  resetUploadState();
-                }}
-                className="text-sm text-primary hover:text-primary-hover transition-colors cursor-pointer"
-              >
-                Choose different file
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <svg
-                className="mx-auto h-12 w-12 text-subtle"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-                aria-hidden="true"
-              >
-                <title>Upload area</title>
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <div className="text-sm text-muted">
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <span className="font-medium text-primary hover:text-primary-hover transition-colors">
-                    Click to upload
-                  </span>
-                  <span> or drag and drop</span>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    className="sr-only"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              </div>
-              <p className="text-xs text-muted">Up to 250MB</p>
-            </div>
-          )}
-        </div>
+      {/* Upload mode tabs */}
+      <div className="border-b border-border">
+        <nav className="-mb-px flex space-x-8" aria-label="Upload mode">
+          <button
+            type="button"
+            onClick={() => setUploadMode('file')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors ${
+              uploadMode === 'file'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted hover:text-foreground hover:border-border'
+            }`}
+          >
+            Upload File
+          </button>
+          <button
+            type="button"
+            onClick={() => setUploadMode('url')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors ${
+              uploadMode === 'url'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted hover:text-foreground hover:border-border'
+            }`}
+          >
+            Upload from URL
+          </button>
+        </nav>
       </div>
 
-      {/* Document metadata form */}
-      {selectedFile && (
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-foreground">
-              Document Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a title for your document"
-              className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
-              required
-            />
+      {uploadMode === 'file' ? (
+        <>
+          {/* File drop zone */}
+          <div
+            role="button"
+            tabIndex={0}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onKeyDown={handleKeyDown}
+            className={`relative border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer ${
+              dragOver
+                ? 'border-primary bg-primary/10'
+                : selectedFile
+                  ? 'border-success bg-success/10'
+                  : 'border-border hover:border-primary/50'
+            }`}
+          >
+            <div className="text-center">
+              {selectedFile ? (
+                <div className="space-y-2">
+                  <svg
+                    className="mx-auto h-12 w-12 text-success"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <title>Document selected</title>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div className="text-sm text-foreground">
+                    <p className="font-medium">{selectedFile.name}</p>
+                    <p className="text-muted">{formatFileSize(selectedFile.size)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      resetUploadState();
+                    }}
+                    className="text-sm text-primary hover:text-primary-hover transition-colors cursor-pointer"
+                  >
+                    Choose different file
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <svg
+                    className="mx-auto h-12 w-12 text-subtle"
+                    stroke="currentColor"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                  >
+                    <title>Upload area</title>
+                    <path
+                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div className="text-sm text-muted">
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <span className="font-medium text-primary hover:text-primary-hover transition-colors">
+                        Click to upload
+                      </span>
+                      <span> or drag and drop</span>
+                      <input
+                        id="file-upload"
+                        name="file-upload"
+                        type="file"
+                        className="sr-only"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <label htmlFor="author" className="block text-sm font-medium text-foreground">
-              Author (optional)
-            </label>
-            <input
-              type="text"
-              id="author"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="Enter author name"
-              className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
-            />
+
+          {/* Document metadata form */}
+          {selectedFile && (
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-foreground">
+                  Document Title *
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter a title for your document"
+                  className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="author" className="block text-sm font-medium text-foreground">
+                  Author (optional)
+                </label>
+                <input
+                  type="text"
+                  id="author"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  placeholder="Enter author name"
+                  className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
+                />
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* URL upload form */}
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="document-url" className="block text-sm font-medium text-foreground">
+                Document URL *
+              </label>
+              <input
+                type="url"
+                id="document-url"
+                value={documentUrl}
+                onChange={(e) => setDocumentUrl(e.target.value)}
+                placeholder="https://example.com/document.pdf"
+                className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="url-title" className="block text-sm font-medium text-foreground">
+                Document Title *
+              </label>
+              <input
+                type="text"
+                id="url-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter a title for your document"
+                className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="url-author" className="block text-sm font-medium text-foreground">
+                Author (optional)
+              </label>
+              <input
+                type="text"
+                id="url-author"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                placeholder="Enter author name"
+                className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
+              />
+            </div>
+            <div>
+              <label htmlFor="document-id" className="block text-sm font-medium text-foreground">
+                Document ID (optional)
+              </label>
+              <input
+                type="text"
+                id="document-id"
+                value={documentId}
+                onChange={(e) => setDocumentId(e.target.value)}
+                placeholder="Specify a custom document ID"
+                className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background sm:text-sm border px-3 py-2 placeholder:text-muted"
+              />
+              <p className="mt-1 text-xs text-muted">Leave empty to auto-generate an ID</p>
+            </div>
+
+            {/* Advanced options */}
+            <div className="border-t border-border pt-4">
+              <h3 className="text-sm font-medium text-foreground mb-3">Advanced Options</h3>
+              <div className="space-y-3">
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="copy-to-storage"
+                      type="checkbox"
+                      checked={urlOptions.copyAssetToStorageBackend}
+                      onChange={(e) =>
+                        setUrlOptions({
+                          ...urlOptions,
+                          copyAssetToStorageBackend: e.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label
+                      htmlFor="copy-to-storage"
+                      className="font-medium text-foreground cursor-pointer"
+                    >
+                      Copy asset to storage backend
+                    </label>
+                    <p className="text-muted">
+                      Store a copy of the document in Document Engine storage
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="keep-annotations"
+                      type="checkbox"
+                      checked={urlOptions.keepCurrentAnnotations}
+                      onChange={(e) =>
+                        setUrlOptions({
+                          ...urlOptions,
+                          keepCurrentAnnotations: e.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label
+                      htmlFor="keep-annotations"
+                      className="font-medium text-foreground cursor-pointer"
+                    >
+                      Keep current annotations
+                    </label>
+                    <p className="text-muted">
+                      Preserve existing annotations when updating a document
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="overwrite-document"
+                      type="checkbox"
+                      checked={urlOptions.overwriteExistingDocument}
+                      onChange={(e) =>
+                        setUrlOptions({
+                          ...urlOptions,
+                          overwriteExistingDocument: e.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label
+                      htmlFor="overwrite-document"
+                      className="font-medium text-foreground cursor-pointer"
+                    >
+                      Overwrite existing document
+                    </label>
+                    <p className="text-muted">
+                      Replace the document if it already exists with the same ID
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Upload progress */}
@@ -366,7 +612,10 @@ export function FileUpload() {
           type="button"
           onClick={handleUpload}
           disabled={
-            !selectedFile || !title.trim() || uploadState.isUploading || uploadState.success
+            (uploadMode === 'file' && (!selectedFile || !title.trim())) ||
+            (uploadMode === 'url' && (!documentUrl.trim() || !title.trim())) ||
+            uploadState.isUploading ||
+            uploadState.success
           }
           className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
         >

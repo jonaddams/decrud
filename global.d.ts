@@ -1,4 +1,6 @@
-// Nutrient Viewer TypeScript definitions based on official API documentation
+// Nutrient Viewer TypeScript definitions for CDN usage
+// NOTE: These definitions are for the global window.NutrientViewer object loaded via CDN,
+// not the @nutrient-sdk/viewer npm package. The npm package has different type exports.
 declare namespace NutrientViewer {
   // Main load function
   function load(configuration: Configuration): Promise<Instance>;
@@ -27,6 +29,11 @@ declare namespace NutrientViewer {
     toolbarItems?: ToolbarItem[];
     initialViewState?: ViewState;
     disableWebAssemblyStreaming?: boolean;
+
+    // Office Document Conversion
+    officeConversionSettings?: {
+      documentMarkupMode?: 'allMarkup' | 'finalMarkup' | 'noMarkup';
+    };
 
     // Feature toggles
     enableHistory?: boolean;
@@ -66,16 +73,58 @@ declare namespace NutrientViewer {
     save(options?: unknown): Promise<ArrayBuffer>;
   }
 
-  // ViewState interface
-  interface ViewState {
+  // ViewState - Immutable.js Record
+  interface ViewStateProperties {
     currentPageIndex?: number;
-    zoom?: number;
+    zoom?: number | ZoomMode;
     scrollTop?: number;
     scrollLeft?: number;
-    rotation?: number;
-    layoutMode?: 'single' | 'double' | 'auto';
-    sidebarMode?: 'thumbnails' | 'outline' | 'annotations' | 'none';
+    pagesRotation?: 0 | 90 | 180 | 270;
+    layoutMode?: LayoutMode;
+    sidebarMode?: SidebarMode;
     showToolbar?: boolean;
+  }
+
+  // ViewState constructor and instance
+  interface ViewStateConstructor {
+    new (properties?: ViewStateProperties): ViewStateInstance;
+  }
+
+  interface ViewStateInstance extends ViewStateProperties {
+    set<K extends keyof ViewStateProperties>(
+      key: K,
+      value: ViewStateProperties[K]
+    ): ViewStateInstance;
+    merge(properties: Partial<ViewStateProperties>): ViewStateInstance;
+  }
+
+  // Type alias for backwards compatibility
+  type ViewState = ViewStateProperties;
+
+  const ViewState: ViewStateConstructor;
+
+  // LayoutMode enum
+  enum LayoutMode {
+    SINGLE = 'SINGLE',
+    DOUBLE = 'DOUBLE',
+    AUTO = 'AUTO',
+  }
+
+  // SidebarMode enum
+  enum SidebarMode {
+    THUMBNAILS = 'THUMBNAILS',
+    OUTLINE = 'OUTLINE',
+    ANNOTATIONS = 'ANNOTATIONS',
+    BOOKMARKS = 'BOOKMARKS',
+    DOCUMENT_OUTLINE = 'DOCUMENT_OUTLINE',
+    CUSTOM = 'CUSTOM',
+  }
+
+  // ZoomMode enum
+  enum ZoomMode {
+    AUTO = 'AUTO',
+    FIT_TO_VIEWPORT = 'FIT_TO_VIEWPORT',
+    FIT_TO_WIDTH = 'FIT_TO_WIDTH',
   }
 
   // Toolbar configuration

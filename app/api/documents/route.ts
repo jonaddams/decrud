@@ -1,9 +1,9 @@
-import { type Prisma, PrismaClient } from '@prisma/client';
-import { type NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 import { documentEngineService } from '@/lib/document-engine';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 /**
  * GET /api/documents
@@ -106,13 +106,87 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/documents
- * Upload a new document
+ * Upload a new document from file or URL
  */
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth();
+    const contentType = request.headers.get('content-type') || '';
 
-    // Parse multipart form data
+    // Check if this is a URL upload (JSON) or file upload (multipart)
+    const isUrlUpload = contentType.includes('application/json');
+
+    if (isUrlUpload) {
+      // Handle URL-based upload
+      const body = await request.json();
+      const {
+        url,
+        title,
+        author,
+        documentId,
+        copyAssetToStorageBackend,
+        keepCurrentAnnotations,
+        overwriteExistingDocument,
+      } = body;
+
+      if (!url) {
+        return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+      }
+
+      if (!title) {
+        return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+      }
+
+      // Upload to Document Engine from URL with retry logic
+      const documentEngineResult = await documentEngineService.withRetry(() =>
+        documentEngineService.uploadDocumentFromUrl({
+          url,
+          documentId,
+          title,
+          copyAssetToStorageBackend: copyAssetToStorageBackend ?? false,
+          keepCurrentAnnotations: keepCurrentAnnotations ?? true,
+          overwriteExistingDocument: overwriteExistingDocument ?? true,
+        })
+      );
+
+      // Extract filename from URL or use title
+      const urlPath = new URL(url).pathname;
+      const filename = urlPath.split('/').pop() || title;
+
+      // Store metadata in database
+      const document = await prisma.document.create({
+        data: {
+          documentEngineId: documentEngineResult.documentId,
+          title,
+          filename,
+          fileType: 'application/pdf', // Default to PDF for URL uploads
+          fileSize: BigInt(0), // Unknown size for URL uploads
+          author: author || session.user.name || session.user.email || 'Unknown',
+          ownerId: session.user.id,
+        },
+        select: {
+          id: true,
+          documentEngineId: true,
+          title: true,
+          filename: true,
+          fileType: true,
+          fileSize: true,
+          author: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      // Convert BigInt to string for JSON serialization
+      const serializedDocument = {
+        ...document,
+        fileSize: document.fileSize?.toString(),
+      };
+
+      return NextResponse.json({ document: serializedDocument }, { status: 201 });
+    }
+
+    // Handle file-based upload
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const title = formData.get('title') as string;
@@ -124,12 +198,6 @@ export async function POST(request: NextRequest) {
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
-    }
-
-    // Validate file size (250MB limit)
-    const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File size must be less than 250MB' }, { status: 400 });
     }
 
     // Upload to Document Engine with retry logic
