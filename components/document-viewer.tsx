@@ -111,6 +111,7 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         officeConversionSettings: {
           documentMarkupMode: 'allMarkup',
         },
+        useCDN: true,
       };
 
       // Initialize using Instant Mode

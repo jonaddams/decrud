@@ -15,6 +15,9 @@ declare namespace NutrientViewer {
     document?: string | ArrayBuffer | Blob | File;
     baseUrl?: string;
 
+    // Asset hosting
+    useCDN?: boolean;
+
     // Authentication
     licenseKey?: string;
 
