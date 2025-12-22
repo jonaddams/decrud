@@ -247,6 +247,7 @@ export function FileUpload() {
       {uploadMode === 'file' ? (
         <>
           {/* File drop zone */}
+          {/* biome-ignore lint/a11y/useSemanticElements: drag-and-drop zone needs div with role button */}
           <div
             role="button"
             tabIndex={0}

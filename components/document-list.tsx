@@ -3,7 +3,7 @@
 import type { Document } from '@prisma/client';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type DocumentWithOwner = Document & {
   ownerId: string;
@@ -24,7 +24,7 @@ export function DocumentList() {
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -41,11 +41,11 @@ export function DocumentList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
   const formatFileSize = (bytes: bigint | null) => {
     if (!bytes || bytes === BigInt(0)) return '0 Bytes';
@@ -131,6 +131,7 @@ export function DocumentList() {
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-error" viewBox="0 0 20 20" fill="currentColor">
+              <title>Error icon</title>
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -167,6 +168,7 @@ export function DocumentList() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
+          <title>No documents icon</title>
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -203,6 +205,7 @@ export function DocumentList() {
                   </Link>
                   {canDeleteDocument(document) && (
                     <button
+                      type="button"
                       onClick={() => handleDeleteClick(document)}
                       className="text-error hover:text-error/80 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
                       disabled={isDeleting}
@@ -292,6 +295,7 @@ export function DocumentList() {
                     </Link>
                     {canDeleteDocument(document) && (
                       <button
+                        type="button"
                         onClick={() => handleDeleteClick(document)}
                         className="text-error hover:text-error/80 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                         disabled={isDeleting}
@@ -320,6 +324,7 @@ export function DocumentList() {
                   strokeWidth="1.5"
                   stroke="currentColor"
                 >
+                  <title>Warning icon</title>
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

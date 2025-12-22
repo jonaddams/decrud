@@ -1,8 +1,1 @@
-node_modules
-.next
-build
-dist
-de-api-docs
-*.generated.*
-.env*
-pnpm-lock.yaml
+global.d.ts

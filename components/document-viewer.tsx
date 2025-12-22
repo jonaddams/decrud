@@ -17,6 +17,7 @@ type ViewerInstance = NutrientViewer.Instance;
 export function DocumentViewer({ documentId, className = '' }: DocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<ViewerInstance | null>(null);
+  const isInitializingRef = useRef<boolean>(false);
   const [error, setError] = useState<ViewerError | null>(null);
   const [viewerData, setViewerData] = useState<{
     documentEngineId: string;
@@ -66,6 +67,13 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
       return;
     }
 
+    // Prevent concurrent initializations
+    if (isInitializingRef.current) {
+      return;
+    }
+
+    isInitializingRef.current = true;
+
     try {
       setError(null);
 
@@ -86,8 +94,13 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         // No existing instance, which is fine
       }
 
-      // Clear the container
-      containerRef.current.innerHTML = '';
+      // Wait for cleanup to complete before clearing the container
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Clear the container to ensure it's empty
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
 
       const serverUrl = `${(
         process.env.NEXT_PUBLIC_DOCUMENT_ENGINE_BASE_URL || 'http://localhost:8585'
@@ -122,32 +135,38 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         message: error instanceof Error ? error.message : 'Failed to load document viewer',
         code: 'VIEWER_ERROR',
       });
+    } finally {
+      isInitializingRef.current = false;
     }
   }, [viewerData]);
 
   // Cleanup function
-  const cleanup = useCallback(() => {
+  const cleanup = useCallback(async () => {
+    // Reset initialization flag
+    isInitializingRef.current = false;
+
     if (instanceRef.current) {
       try {
-        // Prefer unload() as it's the proper async method
-        instanceRef.current.unload().catch((error) => {
-          console.warn('Error unloading Nutrient Viewer:', error);
-        });
+        await instanceRef.current.unload();
+        instanceRef.current = null;
       } catch (error) {
         console.warn('Error cleaning up Nutrient Viewer:', error);
+        instanceRef.current = null;
       }
-      instanceRef.current = null;
     }
 
     // Also try to unload from container directly
     if (containerRef.current && window.NutrientViewer) {
       try {
-        window.NutrientViewer.unload(containerRef.current).catch(() => {
-          // No instance found, which is fine
-        });
+        await window.NutrientViewer.unload(containerRef.current);
       } catch {
         // No instance found, which is fine
       }
+    }
+
+    // Clear the container after unloading
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
     }
   }, []);
 
@@ -195,7 +214,9 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
 
   // Cleanup on unmount
   useEffect(() => {
-    return cleanup;
+    return () => {
+      cleanup();
+    };
   }, [cleanup]);
 
   const handleRetry = useCallback(() => {
