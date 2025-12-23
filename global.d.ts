@@ -68,8 +68,8 @@ declare namespace NutrientViewer {
     getViewState(): ViewState;
 
     // Event handling
-    addEventListener(event: string, callback: Function): void;
-    removeEventListener(event: string, callback: Function): void;
+    addEventListener(event: string, callback: (...args: never[]) => unknown): void;
+    removeEventListener(event: string, callback: (...args: never[]) => unknown): void;
 
     // Export/Save
     exportPDF(options?: unknown): Promise<ArrayBuffer>;
