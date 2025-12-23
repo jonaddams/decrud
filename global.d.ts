@@ -32,7 +32,6 @@ declare namespace NutrientViewer {
     toolbarItems?: ToolbarItem[];
     initialViewState?: ViewState;
     disableWebAssemblyStreaming?: boolean;
-    showSignatureValidationStatus?: ShowSignatureValidationStatusMode;
 
     // Office Document Conversion
     officeConversionSettings?: {
@@ -87,6 +86,7 @@ declare namespace NutrientViewer {
     layoutMode?: LayoutMode;
     sidebarMode?: SidebarMode;
     showToolbar?: boolean;
+    showSignatureValidationStatus?: ShowSignatureValidationStatusMode;
   }
 
   // ViewState constructor and instance

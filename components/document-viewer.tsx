@@ -108,10 +108,12 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
 
       // Create ViewState using Immutable.js Record constructor
       const initialViewState = new window.NutrientViewer.ViewState({
-        currentPageIndex: 98,
+        currentPageIndex: 0,
         zoom: window.NutrientViewer.ZoomMode.FIT_TO_WIDTH,
         pagesRotation: 0,
         sidebarMode: window.NutrientViewer.SidebarMode.THUMBNAILS,
+        showSignatureValidationStatus:
+          window.NutrientViewer.ShowSignatureValidationStatusMode.IF_SIGNED,
       });
 
       const config: NutrientViewer.Configuration = {
@@ -124,8 +126,6 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         officeConversionSettings: {
           documentMarkupMode: 'allMarkup',
         },
-        showSignatureValidationStatus:
-          window.NutrientViewer.ShowSignatureValidationStatusMode.IF_SIGNED,
         useCDN: true,
       };
 
