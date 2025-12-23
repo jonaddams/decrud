@@ -32,6 +32,7 @@ declare namespace NutrientViewer {
     toolbarItems?: ToolbarItem[];
     initialViewState?: ViewState;
     disableWebAssemblyStreaming?: boolean;
+    showSignatureValidationStatus?: ShowSignatureValidationStatusMode;
 
     // Office Document Conversion
     officeConversionSettings?: {
@@ -128,6 +129,13 @@ declare namespace NutrientViewer {
     AUTO = 'AUTO',
     FIT_TO_VIEWPORT = 'FIT_TO_VIEWPORT',
     FIT_TO_WIDTH = 'FIT_TO_WIDTH',
+  }
+
+  // ShowSignatureValidationStatusMode enum
+  enum ShowSignatureValidationStatusMode {
+    IF_SIGNED = 'IF_SIGNED',
+    ALWAYS = 'ALWAYS',
+    NEVER = 'NEVER',
   }
 
   // Toolbar configuration

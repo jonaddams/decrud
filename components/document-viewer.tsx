@@ -124,6 +124,8 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         officeConversionSettings: {
           documentMarkupMode: 'allMarkup',
         },
+        showSignatureValidationStatus:
+          window.NutrientViewer.ShowSignatureValidationStatusMode.IF_SIGNED,
         useCDN: true,
       };
 
