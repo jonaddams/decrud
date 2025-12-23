@@ -20,21 +20,21 @@ export async function getSession() {
  * Throws an error if no valid session is found.
  * Use this in API routes and server components to ensure authentication.
  */
-export async function requireAuth() {
+export async function requireAuth(): Promise<{ user: SessionUser }> {
   const session = await getSession();
 
   if (!session?.user?.id) {
     throw new Error('Authentication required');
   }
 
-  return session;
+  return session as { user: SessionUser };
 }
 
 /**
  * Validates that a user has admin role.
  * Throws an error if user is not an admin.
  */
-export async function requireAdmin() {
+export async function requireAdmin(): Promise<{ user: SessionUser }> {
   const session = await requireAuth();
 
   if (session.user.role !== 'ADMIN') {
