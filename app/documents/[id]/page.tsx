@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { DocumentMetadata } from '@/components/document-metadata';
-import { DocumentViewer } from '@/components/document-viewer';
+import { DocumentViewWrapper } from '@/components/document-view-wrapper';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { getEffectiveDocumentFilter, requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -102,8 +102,12 @@ export default async function DocumentView({ params }: { params: Promise<Params>
             {/* Document metadata with sign button */}
             <DocumentMetadata document={document} isOwner={isOwner} />
 
-            {/* Document viewer */}
-            <DocumentViewer documentId={document.id} className="h-[calc(100vh-240px)]" />
+            {/* Document viewer with permission selector */}
+            <DocumentViewWrapper
+              documentId={document.id}
+              isOwner={isOwner}
+              className="h-[calc(100vh-280px)]"
+            />
           </div>
         </div>
       </div>

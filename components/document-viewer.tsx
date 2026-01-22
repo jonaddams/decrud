@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+type PermissionLevel = 'read-only' | 'edit';
+
 type DocumentViewerProps = {
   documentId: string;
+  permissionLevel?: PermissionLevel;
   className?: string;
 };
 
@@ -14,7 +17,11 @@ type ViewerError = {
 
 type ViewerInstance = NutrientViewer.Instance;
 
-export function DocumentViewer({ documentId, className = '' }: DocumentViewerProps) {
+export function DocumentViewer({
+  documentId,
+  permissionLevel = 'read-only',
+  className = '',
+}: DocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<ViewerInstance | null>(null);
   const isInitializingRef = useRef<boolean>(false);
@@ -29,7 +36,9 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
     try {
       setError(null);
 
-      const response = await fetch(`/api/documents/${documentId}/viewer-url`);
+      const response = await fetch(
+        `/api/documents/${documentId}/viewer-url?permissionLevel=${permissionLevel}`
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -59,7 +68,7 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
         code: 'FETCH_ERROR',
       });
     }
-  }, [documentId]);
+  }, [documentId, permissionLevel]);
 
   // Initialize the Nutrient Viewer using Instant Mode
   const initializeViewer = useCallback(async () => {
@@ -127,31 +136,23 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
           documentMarkupMode: 'allMarkup',
         },
         useCDN: true,
-        toolbarItems: [
-          { type: 'sidebar-thumbnails' },
-          { type: 'sidebar-document-outline' },
-          { type: 'sidebar-annotations' },
-          { type: 'pager' },
-          { type: 'pan' },
-          { type: 'zoom-out' },
-          { type: 'zoom-in' },
-          { type: 'zoom-mode' },
-          { type: 'spacer' },
-          // Annotation tools
-          { type: 'ink' },
-          { type: 'highlighter' },
-          { type: 'text-highlighter' },
-          { type: 'ink-eraser' },
-          { type: 'signature' },
-          { type: 'image' },
-          { type: 'stamp' },
-          { type: 'note' },
-          { type: 'text' },
-          { type: 'spacer' },
-          { type: 'search' },
-          { type: 'print' },
-          { type: 'export-pdf' },
-        ],
+        toolbarItems:
+          permissionLevel === 'edit'
+            ? [
+                ...(window.NutrientViewer as any).defaultToolbarItems,
+                { type: 'spacer' },
+                // Annotation tools (only in edit mode)
+                { type: 'ink' },
+                { type: 'highlighter' },
+                { type: 'text-highlighter' },
+                { type: 'ink-eraser' },
+                { type: 'signature' },
+                { type: 'image' },
+                { type: 'stamp' },
+                { type: 'note' },
+                { type: 'text' },
+              ]
+            : (window.NutrientViewer as any).defaultToolbarItems,
       };
 
       // Initialize using Instant Mode

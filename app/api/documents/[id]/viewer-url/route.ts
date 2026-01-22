@@ -8,11 +8,15 @@ import { prisma } from '@/lib/prisma';
  * GET /api/documents/[id]/viewer-url
  * Generate a Document Engine viewer URL with JWT
  */
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await requireAuth();
     const filter = getEffectiveDocumentFilter(session.user);
+
+    // Get permission level from query params (default to read-only)
+    const { searchParams } = new URL(request.url);
+    const permissionLevel = searchParams.get('permissionLevel') || 'read-only';
 
     // Check if document exists and user has access
     const document = await prisma.document.findFirst({
@@ -31,8 +35,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    // Generate JWT for viewer access
-    const permissions = ['read-document', 'download', 'cover-image'];
+    // Generate JWT based on permission level
+    const basePermissions = ['read-document', 'download', 'cover-image'];
+    const permissions =
+      permissionLevel === 'edit' ? [...basePermissions, 'write'] : basePermissions;
     const jwtToken = await documentEngineService.generateViewerJWT(
       document.documentEngineId,
       permissions,
