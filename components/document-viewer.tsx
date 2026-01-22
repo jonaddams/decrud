@@ -127,6 +127,31 @@ export function DocumentViewer({ documentId, className = '' }: DocumentViewerPro
           documentMarkupMode: 'allMarkup',
         },
         useCDN: true,
+        toolbarItems: [
+          { type: 'sidebar-thumbnails' },
+          { type: 'sidebar-document-outline' },
+          { type: 'sidebar-annotations' },
+          { type: 'pager' },
+          { type: 'pan' },
+          { type: 'zoom-out' },
+          { type: 'zoom-in' },
+          { type: 'zoom-mode' },
+          { type: 'spacer' },
+          // Annotation tools
+          { type: 'ink' },
+          { type: 'highlighter' },
+          { type: 'text-highlighter' },
+          { type: 'ink-eraser' },
+          { type: 'signature' },
+          { type: 'image' },
+          { type: 'stamp' },
+          { type: 'note' },
+          { type: 'text' },
+          { type: 'spacer' },
+          { type: 'search' },
+          { type: 'print' },
+          { type: 'export-pdf' },
+        ],
       };
 
       // Initialize using Instant Mode
